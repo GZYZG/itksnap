@@ -9,6 +9,14 @@
 #include <QImageReader>
 #include <QImageWriter>
 
+// vtk
+#include <vtkCamera.h>
+#include <vtkDataSetMapper.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkProperty.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkDataSetReader.h>
+
 // 我的头文件
 #include "organlabeleditor.h"
 #include "colorlisteditor.h"
@@ -23,6 +31,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->initLeft();
     qDebug() << ui->openGLWidget->objectName();
+
+    vtkNew<vtkGenericOpenGLRenderWindow> window;
+    ui->openGLWidget->setRenderWindow(window.Get());
+
+    // Camera
+    vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
+    camera->SetViewUp(0, 1, 0);
+    camera->SetPosition(0, 0, 10);
+    camera->SetFocalPoint(0, 0, 0);
+
+    // Renderer
+    m_renderer = vtkSmartPointer<vtkRenderer>::New();
+    m_renderer->SetActiveCamera(camera);
+    m_renderer->SetBackground(0.5, 0.5, 0.5);
+    ui->openGLWidget->renderWindow()->AddRenderer(m_renderer);
 }
 
 MainWindow::~MainWindow()
@@ -67,7 +90,9 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
 
 void MainWindow::on_actionOpen_triggered(){
     QString fileName = QFileDialog::getOpenFileName(this, "Open the file");
+    this->loadDataset(fileName);
     QFile file(fileName);
+    qDebug() << "You select " << fileName;
     //currentFile = fileName;
     if (!file.open(QIODevice::ReadOnly | QFile::Text)) {
         QMessageBox::warning(this, "Warning", "Cannot open file: " + file.errorString());
@@ -80,9 +105,8 @@ void MainWindow::on_actionOpen_triggered(){
     //ui->textEdit->setText(text);
     file.close();
 
-    QFileDialog dialog(this, tr("Open File"));
-    initializeImageFileDialog(dialog, QFileDialog::AcceptOpen);
-
+    //QFileDialog dialog(this, tr("Open File"));
+    //initializeImageFileDialog(dialog, QFileDialog::AcceptOpen);
     //while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
 }
 
@@ -120,6 +144,47 @@ void MainWindow::initLeft(){
 
 
 }
+
+
+void MainWindow::removeDataset(){
+    vtkActor* actor = this->m_renderer->GetActors()->GetLastActor();
+    if(actor != nullptr){
+        this->m_renderer->RemoveActor(actor);
+    }
+    ui->openGLWidget->renderWindow()->Render();
+}
+
+
+void MainWindow::addDataset(vtkSmartPointer<vtkDataSet> dataset){
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+
+    mapper->SetInputData(dataset);
+    actor->SetMapper(mapper);
+
+    this->m_renderer->AddActor(actor);
+    this->m_renderer->ResetCamera(actor->GetBounds());
+
+    this->m_renderer->Render();
+}
+
+void MainWindow::loadDataset(QString filePath){
+    this->removeDataset();
+
+    // Create reader
+    vtkSmartPointer<vtkDataSetReader> reader = vtkSmartPointer<vtkDataSetReader>::New();
+    reader->SetFileName(filePath.toStdString().c_str());
+
+    // Read the file
+    reader->Update();
+
+    // Add data set to 3D view
+    vtkSmartPointer<vtkDataSet> dataSet = reader->GetOutput();
+    if (dataSet != nullptr) {
+        this->addDataset(reader->GetOutput());
+    }
+}
+
 
 void MainWindow::colorwheel(const QColor& color){
     qDebug() << "hahah" << color;

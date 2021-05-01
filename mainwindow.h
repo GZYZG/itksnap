@@ -6,6 +6,12 @@
 #include <QToolBox>
 #include <QListWidget>
 
+// vtk
+#include <vtkSmartPointer.h>
+#include <vtkRenderer.h>
+#include <QVTKOpenGLNativeWidget.h>
+#include <vtkDataSet.h>
+
 
 // 定义独立于实现的类名
 typedef QGroupBox OrganLabelContainer ;
@@ -27,6 +33,9 @@ public:
     ~MainWindow();
 
     void initLeft();
+    void loadDataset(QString filePath);
+    void removeDataset();
+    void addDataset(vtkSmartPointer<vtkDataSet> dataset);
 
 private slots:
     void on_pushButton_clicked();
@@ -35,6 +44,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    vtkSmartPointer<vtkRenderer> m_renderer;
 };
 
 #endif // MAINWINDOW_H
