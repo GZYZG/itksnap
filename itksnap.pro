@@ -34,7 +34,9 @@ SOURCES += \
         window.cpp  \
         ColorWheel.cpp \
         LabelEditorDialog.cpp \
-        abstractmodel.cpp
+        abstractmodel.cpp \
+        utils.cpp \
+    label.cpp
         LabelEditorDialog.cpp
 
 
@@ -45,7 +47,9 @@ HEADERS += \
         window.h  \
         ColorWheel.h  \
         LabelEditorDialog.h \
-        abstractmodel.h
+        abstractmodel.h \
+        utils.h \
+    label.h
 
 
 

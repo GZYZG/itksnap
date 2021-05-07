@@ -16,12 +16,16 @@
 #include <vtkProperty.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkDataSetReader.h>
+#include <vtkNIFTIImageReader.h>
+#include <vtkImageData.h>
+
 
 // 我的头文件
 #include "organlabeleditor.h"
 #include "colorlisteditor.h"
 #include "window.h"
 #include "ColorWheel.h"
+#include "utils.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -30,10 +34,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->initLeft();
-    qDebug() << ui->openGLWidget->objectName();
+    //qDebug() << ui->view3d->objectName();
 
     vtkNew<vtkGenericOpenGLRenderWindow> window;
-    ui->openGLWidget->setRenderWindow(window.Get());
+    ui->view3d->setRenderWindow(window.Get());
 
     // Camera
     vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
@@ -44,8 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Renderer
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
     m_renderer->SetActiveCamera(camera);
-    m_renderer->SetBackground(0.5, 0.5, 0.5);
-    ui->openGLWidget->renderWindow()->AddRenderer(m_renderer);
+    m_renderer->SetBackground(.8, .8, .8);
+    ui->view3d->renderWindow()->AddRenderer(m_renderer);
 }
 
 MainWindow::~MainWindow()
@@ -66,27 +70,6 @@ void MainWindow::on_pushButton_clicked()
 }
 
 
-static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode)
-{
-    static bool firstDialog = true;
-
-    if (firstDialog) {
-        firstDialog = false;
-        const QStringList picturesLocations = QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
-        dialog.setDirectory(picturesLocations.isEmpty() ? QDir::currentPath() : picturesLocations.last());
-    }
-
-    QStringList mimeTypeFilters;
-    const QByteArrayList supportedMimeTypes = acceptMode == QFileDialog::AcceptOpen
-        ? QImageReader::supportedMimeTypes() : QImageWriter::supportedMimeTypes();
-    foreach (const QByteArray &mimeTypeName, supportedMimeTypes)
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-    dialog.selectMimeTypeFilter("image/jpeg");
-    if (acceptMode == QFileDialog::AcceptSave)
-        dialog.setDefaultSuffix("jpg");
-}
 
 void MainWindow::on_actionOpen_triggered(){
     QString fileName = QFileDialog::getOpenFileName(this, "Open the file");
@@ -99,12 +82,12 @@ void MainWindow::on_actionOpen_triggered(){
         return;
     }
     setWindowTitle(fileName);
-    QTextStream in(&file);
+    /*QTextStream in(&file);
     QString text = in.readAll();
     qDebug() << text;
     //ui->textEdit->setText(text);
     file.close();
-
+    */
     //QFileDialog dialog(this, tr("Open File"));
     //initializeImageFileDialog(dialog, QFileDialog::AcceptOpen);
     //while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
@@ -147,21 +130,24 @@ void MainWindow::initLeft(){
 
 
 void MainWindow::removeDataset(){
+    // 移除view3D中的对象
     vtkActor* actor = this->m_renderer->GetActors()->GetLastActor();
     if(actor != nullptr){
         this->m_renderer->RemoveActor(actor);
     }
-    ui->openGLWidget->renderWindow()->Render();
+    ui->view3d->renderWindow()->Render();
 }
 
 
-void MainWindow::addDataset(vtkSmartPointer<vtkDataSet> dataset){
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
-
-    mapper->SetInputData(dataset);
-    actor->SetMapper(mapper);
-
+void MainWindow::addDataset(vtkImageAlgorithm* reader){
+    vtkMarchingCubes* surfaces = createSurfaces(reader->GetOutput());
+    vtkSmoothPolyDataFilter* smoother = createSmoother(surfaces->GetOutputPort(), 50);
+    vtkPolyDataNormals* normals = createNormals(smoother->GetOutputPort());
+    vtkPolyDataMapper* mapper = createMapper(normals->GetOutputPort());
+    double* range = reader->GetOutput()->GetScalarRange();
+    vtkLookupTable* lut = createColorTable(int(range[0]), int(range[1]));
+    mapper->SetLookupTable(lut);
+    vtkActor* actor = createActor(mapper);
     this->m_renderer->AddActor(actor);
     this->m_renderer->ResetCamera(actor->GetBounds());
 
@@ -172,16 +158,21 @@ void MainWindow::loadDataset(QString filePath){
     this->removeDataset();
 
     // Create reader
-    vtkSmartPointer<vtkDataSetReader> reader = vtkSmartPointer<vtkDataSetReader>::New();
-    reader->SetFileName(filePath.toStdString().c_str());
+    //vtkSmartPointer<vtkDataSetReader> reader = vtkSmartPointer<vtkDataSetReader>::New();
+    //reader->SetFileName(filePath.toStdString().c_str());
 
+    vtkNew<vtkNIFTIImageReader> reader;// = vtkSmartPointer<vtkNIFTIImageReader>::New();
+    reader->SetFileName(filePath.toStdString().c_str());
     // Read the file
     reader->Update();
 
     // Add data set to 3D view
-    vtkSmartPointer<vtkDataSet> dataSet = reader->GetOutput();
+    vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
     if (dataSet != nullptr) {
-        this->addDataset(reader->GetOutput());
+        vtkImageData* data = reader->GetOutput();//->GetScalarRange();
+        double* range = data->GetScalarRange();
+        qDebug() << "Scalar range is "<< range[0] << " " << range[1];
+        this->addDataset(reader);
     }
 }
 

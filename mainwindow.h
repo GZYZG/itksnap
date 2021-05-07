@@ -11,7 +11,8 @@
 #include <vtkRenderer.h>
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkDataSet.h>
-
+#include <vtkAlgorithm.h>
+#include <vtkImageAlgorithm.h>
 
 // 定义独立于实现的类名
 typedef QGroupBox OrganLabelContainer ;
@@ -35,7 +36,7 @@ public:
     void initLeft();
     void loadDataset(QString filePath);
     void removeDataset();
-    void addDataset(vtkSmartPointer<vtkDataSet> dataset);
+    void addDataset(vtkImageAlgorithm* reader);
 
 private slots:
     void on_pushButton_clicked();

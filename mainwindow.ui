@@ -62,7 +62,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QVTKOpenGLWidget" name="openGLWidget"/>
+         <widget class="QVTKOpenGLWidget" name="view3d"/>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton">
@@ -76,13 +76,13 @@
       <item>
        <layout class="QVBoxLayout" name="rightLayout">
         <item>
-         <widget class="QVTKOpenGLWidget" name="openGLWidget_3"/>
+         <widget class="QVTKOpenGLWidget" name="viewXY"/>
         </item>
         <item>
-         <widget class="QVTKOpenGLWidget" name="openGLWidget_4"/>
+         <widget class="QVTKOpenGLWidget" name="viewXZ"/>
         </item>
         <item>
-         <widget class="QVTKOpenGLWidget" name="openGLWidget_2"/>
+         <widget class="QVTKOpenGLWidget" name="viewYZ"/>
         </item>
        </layout>
       </item>
