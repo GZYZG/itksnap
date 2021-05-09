@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 CONFIG +=USE_VTK
+CONFIG +=USE_ITK
 
 SOURCES += \
         main.cpp \
@@ -36,8 +37,10 @@ SOURCES += \
         LabelEditorDialog.cpp \
         abstractmodel.cpp \
         utils.cpp \
-    label.cpp
-        LabelEditorDialog.cpp
+        label.cpp  \
+        LabelEditorDialog.cpp  \
+        ViewPanel3D.cpp  \
+        SliceViewPanel.cpp
 
 
 HEADERS += \
@@ -49,19 +52,42 @@ HEADERS += \
         LabelEditorDialog.h \
         abstractmodel.h \
         utils.h \
-    label.h
+        label.h \
+        ViewPanel3D.h  \
+        SliceViewPanel.h \
+    niftiimagereader.h
 
 
 
 
 FORMS += \
         mainwindow.ui \
-        LabelEditorDialog.ui
+        LabelEditorDialog.ui \
+        ViewPanel3D.ui  \
+        SliceViewPanel.ui
 
 INCLUDEPATH += D:/codeprograms/mybuilds/vtk9.0install/include/vtk-9.0
+INCLUDEPATH += D:/codeprograms/itk_install/include/ITK-5.1
 
+
+QMAKE_LIBDIR +=  D:/Windows Kits/10/Lib/10.0.17763.0/um/x64
+LIBS+=kernel32.lib \
+      user32.lib \
+      gdi32.lib \
+      winspool.lib \
+      comdlg32.lib \
+      advapi32.lib \
+      shell32.lib \
+      ole32.lib \
+      oleaut32.lib \
+      uuid.lib \
+      odbc32.lib \
+      odbccp32.lib \
 
 LIBS += $$quote(D:/codeprograms/mybuilds/vtk9.0install/lib/*.lib)
+LIBS += $$quote(D:/codeprograms/itk_install/lib/*.lib)
+#LIBS += $$quote(D:/Windows Kits/10/Lib/10.0.17763.0/um/x64/*.lib)
+
 
 
 
@@ -69,3 +95,6 @@ LIBS += $$quote(D:/codeprograms/mybuilds/vtk9.0install/lib/*.lib)
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc

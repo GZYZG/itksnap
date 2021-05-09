@@ -6,11 +6,14 @@
 #include <QLabel>
 #include <QPushButton>
 
+#include "LabelEditorDialog.h"
+
 
 class OrganLabelEditor : public QWidget{
     Q_OBJECT
 public:
     static uint count;
+    static LabelEditorDialog* labelEditor;
 
     uint index;
 
@@ -18,12 +21,13 @@ public:
     float opacity;
     QLabel* nameLabel;
     QPushButton* colorLabel;
-    QLabel* opacityLabel;
+    QPushButton* opacityLabel;
     QLayout* layout;
 
-    OrganLabelEditor();
-    OrganLabelEditor(QString organName);
-    OrganLabelEditor(QString organName, QColor* color);
+
+    OrganLabelEditor(QWidget* parent=0);
+    OrganLabelEditor(QString organName, QWidget* parent=0);
+    OrganLabelEditor(QString organName, QColor* color, QWidget* parent=0);
 
     ~OrganLabelEditor();
 

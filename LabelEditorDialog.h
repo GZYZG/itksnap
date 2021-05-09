@@ -44,6 +44,10 @@ private slots:
 
   void on_actionShow_all_labels_in_3D_window_triggered();
 
+  void inColorWheelChanged(const QColor &);
+
+  void on_inLabelOpacitySlider_valueChanged(int value);
+
 private:
   LabelEditorModel *m_Model;
 

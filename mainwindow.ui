@@ -28,7 +28,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
-     <layout class="QHBoxLayout" name="Layout" stretch="2,9,3">
+     <layout class="QHBoxLayout" name="Layout" stretch="2,8,3">
       <item>
        <layout class="QVBoxLayout" name="leftLayout">
         <item>
@@ -60,31 +60,10 @@
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QVTKOpenGLWidget" name="view3d"/>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton">
-          <property name="text">
-           <string>PushButton</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="middleLayout"/>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="rightLayout">
-        <item>
-         <widget class="QVTKOpenGLWidget" name="viewXY"/>
-        </item>
-        <item>
-         <widget class="QVTKOpenGLWidget" name="viewXZ"/>
-        </item>
-        <item>
-         <widget class="QVTKOpenGLWidget" name="viewYZ"/>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="rightLayout"/>
       </item>
      </layout>
     </item>
@@ -103,7 +82,8 @@
     <property name="title">
      <string>文件</string>
     </property>
-    <addaction name="actionOpen"/>
+    <addaction name="actionOpen_MainImage"/>
+    <addaction name="actionOpen_Segmentation"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
     <addaction name="separator"/>
@@ -119,9 +99,9 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionOpen">
+  <action name="actionOpen_MainImage">
    <property name="text">
-    <string>Open</string>
+    <string>Open Main Image</string>
    </property>
   </action>
   <action name="actionSave">
@@ -137,15 +117,13 @@
     <string>Save as </string>
    </property>
   </action>
+  <action name="actionOpen_Segmentation">
+   <property name="text">
+    <string>Open Segmentation</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>QVTKOpenGLWidget</class>
-   <extends>QOpenGLWidget</extends>
-   <header>qvtkopenglwidget.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
