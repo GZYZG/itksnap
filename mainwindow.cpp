@@ -73,41 +73,37 @@ MainWindow::~MainWindow()
 
 
 void MainWindow::on_actionOpen_MainImage_triggered(){
-    QString fileName = QFileDialog::getOpenFileName(this, "Open the file");
-    this->loadMainImage(fileName);
-    QFile file(fileName);
-
-    //currentFile = fileName;
-    if (!file.open(QIODevice::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, "Warning", "Cannot open file: " + file.errorString());
+    QFileDialog* dialog = new QFileDialog(this);
+    dialog->setDirectory("../itksnap/");
+    QString fileName = dialog->getOpenFileName(this, "选择文件");
+    qDebug() << "You select " << fileName;
+    if(!fileName.length()){
         return;
     }
-    setWindowTitle(fileName);
-    /*QTextStream in(&file);
-    QString text = in.readAll();
-    qDebug() << text;
-    //ui->textEdit->setText(text);
-    file.close();
-    */
-    //QFileDialog dialog(this, tr("Open File"));
-    //initializeImageFileDialog(dialog, QFileDialog::AcceptOpen);
-    //while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
+    this->loadMainImage(fileName);
 }
 
 
 
 void MainWindow::on_actionOpen_Segmentation_triggered(){
-    QString fileName = QFileDialog::getOpenFileName(this, "Open the file");
-    this->loadDataset(fileName);
-    QFile file(fileName);
+    QFileDialog* dialog = new QFileDialog(this);
+    dialog->setDirectory("../itksnap/");
+    QString fileName = dialog->getOpenFileName(this, "选择分割结果文件");
     qDebug() << "You select " << fileName;
+    if(!fileName.length()){
+        return;
+    }
+    this->loadSegmentation(fileName);
+    /*
+    QFile file(fileName);
+
     //currentFile = fileName;
     if (!file.open(QIODevice::ReadOnly | QFile::Text)) {
         QMessageBox::warning(this, "Warning", "Cannot open file: " + file.errorString());
         return;
     }
     setWindowTitle(fileName);
-    /*QTextStream in(&file);
+    QTextStream in(&file);
     QString text = in.readAll();
     qDebug() << text;
     //ui->textEdit->setText(text);
@@ -185,21 +181,29 @@ void MainWindow::initRight(){
     this->sliceView3 = slice3;
 
     m_sliceRenderer1 = vtkSmartPointer<vtkRenderer>::New();
-    m_sliceRenderer1->SetBackground(.8, .8, .8);
     this->sliceView1->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer1);
+
+    m_sliceRenderer2 = vtkSmartPointer<vtkRenderer>::New();
+    this->sliceView2->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer2);
+
+    m_sliceRenderer3 = vtkSmartPointer<vtkRenderer>::New();
+    this->sliceView3->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer3);
 }
 
 
 void MainWindow::removeDataset(){
     // 移除view3D中的对象
-    vtkActor* actor = this->m_renderer->GetActors()->GetLastActor();
-    if(actor != nullptr){
-        this->m_renderer->RemoveActor(actor);
+    vtkActor* actor;
+    vtkActorCollection* actors = this->m_renderer->GetActors();
+    if(actors != nullptr){
+        while((actor = actors->GetLastActor()) != nullptr){
+            this->m_renderer->RemoveActor(actor);
+        }
     }
     this->view3d->renderWindow()->Render();
 }
 
-
+// 废弃
 void MainWindow::addDataset(vtkImageAlgorithm* reader){
     vtkMarchingCubes* surfaces = createSurfaces(reader->GetOutput());
     vtkSmoothPolyDataFilter* smoother = createSmoother(surfaces->GetOutputPort(), 50);
@@ -216,17 +220,8 @@ void MainWindow::addDataset(vtkImageAlgorithm* reader){
     this->m_renderer->Render();
 }
 
-void MainWindow::loadDataset(QString filePath){
+void MainWindow::loadSegmentation(QString filePath){
     this->removeDataset();
-
-    // Create reader
-    //vtkSmartPointer<vtkDataSetReader> reader = vtkSmartPointer<vtkDataSetReader>::New();
-    //reader->SetFileName(filePath.toStdString().c_str());
-
-    vtkNew<vtkNIFTIImageReader> reader;// = vtkSmartPointer<vtkNIFTIImageReader>::New();
-    reader->SetFileName(filePath.toStdString().c_str());
-    // Read the file
-    reader->Update();
 
     NIIObject *mask = new NIIObject(filePath.toStdString());
     mask->surfaceRendering(this->m_renderer);
@@ -239,15 +234,19 @@ void MainWindow::loadDataset(QString filePath){
         organLabelLayout->addWidget(mask->m_labels->at(i)->m_rgba);
     }
     organLabelLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
     // 将LabelEditorDialog 的信后 和 NIIObject 的槽 连接起来
     // 当标签的颜色或透明度改变时修改可视化对象的颜色和透明度
-
     LabelEditorDialog *labelEditor = mask->m_labels->at(0)->m_rgba->labelEditor;
     connect(labelEditor, SIGNAL(opacityChanged(int, int)), mask, SLOT(changeSurfaceOpacity(int, int)));
     connect(labelEditor, SIGNAL(colorChanged(int, int, int, int, int)), mask, SLOT(changeSurfaceColor(int, int, int, int, int)));
 
-    // Add data set to 3D view
-    /*vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
+    /* Add data set to 3D view
+    vtkNew<vtkNIFTIImageReader> reader;// = vtkSmartPointer<vtkNIFTIImageReader>::New();
+    reader->SetFileName(filePath.toStdString().c_str());
+    // Read the file
+    reader->Update();
+    vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
     if (dataSet != nullptr) {
         vtkImageData* data = reader->GetOutput();//->GetScalarRange();
         double* range = data->GetScalarRange();
@@ -259,7 +258,6 @@ void MainWindow::loadDataset(QString filePath){
 
 void MainWindow::loadMainImage(const QString &filePath){
     /**/
-    qDebug() << "You select :" << filePath;
     using PixelType = int;  //定义像素类型
     constexpr unsigned int Dimension = 3;  // 定义图像维度
 
@@ -269,7 +267,7 @@ void MainWindow::loadMainImage(const QString &filePath){
     // 读取切片
     NiftiImageReader<PixelType, Dimension>::ImageType::Pointer slice = reader->extractSlice(2, 0, 1);
     //std::cout << "Slice is :\n" << slice << endl;
-    std::cout << "Slice's size is: " << reader->getImageSize(slice)<< std::endl;
+    //std::cout << "Slice's size is: " << reader->getImageSize(slice)<< std::endl;
 
     // 直接读取一个二维切片还未完成
     /*NiftiImageReader<PixelType, Dimension>::ImageType::Pointer oneSlice = reader->extractOneSlice(2, 0);
@@ -277,9 +275,13 @@ void MainWindow::loadMainImage(const QString &filePath){
     std::cout << "One Slice's size is: " << reader->getImageSize(oneSlice) << endl;
     */
 
-    std::cout << reader->itkToVtk(slice) << endl;
-
-    reader->show3dImage(reader->image, this->sliceView1->getVTKView()->renderWindow());
+    //std::cout << reader->itkToVtk(slice) << endl;
+    std::cout << "XY" << endl;
+    reader->show3dImage_XY(reader->image, this->sliceView1->getVTKView()->renderWindow());
+    std::cout << "YZ" << endl;
+    reader->show3dImage_YZ(reader->image, this->sliceView2->getVTKView()->renderWindow());
+    std::cout << "XZ" << endl;
+    reader->show3dImage_XZ(reader->image, this->sliceView3->getVTKView()->renderWindow());
 
     //std::cout << slices->GetLargestPossibleRegion().Slice(0) << endl;
     //dynamic_cast<QGraphicsView*>(this->sliceView1)

@@ -49,7 +49,6 @@ public:
         this->setFileName(filename);
         this->update();
         this->image = reader->GetOutput();
-        std::cout << this->image << std::endl;
     }
 
     ~NiftiImageReader(){
@@ -68,7 +67,6 @@ public:
         start[dim] = startSliceIndex;
 
         typename ImageType::RegionType desiredRegion;
-        //无聊的话可以试试自己改变size和start，温馨提示：中间有坑，新手司机请注意路况
         desiredRegion.SetSize(  size  );
         desiredRegion.SetIndex( start );
 
@@ -149,7 +147,7 @@ public:
         return flip1->GetOutput();
     }
 
-    void show3dImage(typename ImageType::Pointer img, vtkRenderWindow* window)
+    void show3dImage(std::string type, typename ImageType::Pointer img, vtkRenderWindow* window)
     {
         vtkSmartPointer<vtkImageViewer2> viewer =
             vtkSmartPointer<vtkImageViewer2>::New();
@@ -160,7 +158,17 @@ public:
         viewer->SetColorLevel(500);
         viewer->SetColorWindow(2000);
         viewer->SetSlice(40);
-        viewer->SetSliceOrientationToXY();
+        if(type == "XY"){
+            viewer->SetSliceOrientationToXY();
+        } else if(type == "YZ"){
+            viewer->SetSliceOrientationToYZ();
+        } else if(type == "XZ"){
+            viewer->SetSliceOrientationToXZ();
+        } else {
+            std::cerr << "请设置正确的切片查看方向，可选值：XY, YZ, XZ" << endl;
+            return;
+        }
+
         viewer->Render();
         viewer->GetRenderer()->SetBackground(0, 0, 0);
         viewer->GetRenderWindow()->SetWindowName("ImageViewer2D");
@@ -207,10 +215,24 @@ public:
         axes->SetShaftTypeToLine();
         axes->SetAxisLabels(false);
         viewer->GetRenderer()->AddActor(axes);
-        rwi->Start();
+        std:cout << "hahaha" << endl;
+        //rwi->Start();
         viewer->Render();
+        window->Render();
     }
 
+    void show3dImage_XY(typename ImageType::Pointer img, vtkRenderWindow* window){
+        show3dImage("XY", img, window);
+
+    }
+
+    void show3dImage_YZ(typename ImageType::Pointer img, vtkRenderWindow* window){
+        show3dImage("YZ", img, window);
+    }
+
+    void show3dImage_XZ(typename ImageType::Pointer img, vtkRenderWindow* window){
+        show3dImage("XZ", img, window);
+    }
 
 
     typename ImageType::SizeType getImageSize(){

@@ -118,8 +118,8 @@ SliceViewPanel::SliceViewPanel(QWidget *parent) :
   ui->inSlicePosition->setPageStep(5);
 
   // Set up the drawing cursor
-  QBitmap bmBitmap(":/root/crosshair_cursor_bitmap.png");
-  QBitmap bmMask(":/root/crosshair_cursor_mask.png");
+  QBitmap bmBitmap(":/new/Resources/crosshair_cursor_bitmap.png");
+  QBitmap bmMask(":/new/Resources/crosshair_cursor_mask.png");
   m_DrawingCrosshairCursor = new QCursor(bmBitmap, bmMask, 7, 7);
 
   // Configure the context tool button

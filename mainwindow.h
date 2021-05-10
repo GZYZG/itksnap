@@ -43,7 +43,7 @@ public:
     void initLeft();
     void initRight();
     void initMiddle();
-    void loadDataset(QString filePath);
+    void loadSegmentation(QString filePath);
     void removeDataset();
     void addDataset(vtkImageAlgorithm* reader);
     void loadMainImage(const QString &filePath);
