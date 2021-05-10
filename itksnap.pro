@@ -40,7 +40,10 @@ SOURCES += \
         label.cpp  \
         LabelEditorDialog.cpp  \
         ViewPanel3D.cpp  \
-        SliceViewPanel.cpp
+        SliceViewPanel.cpp \
+    niiobject.cpp \
+    niilabel.cpp \
+    printutils.cpp
 
 
 HEADERS += \
@@ -55,7 +58,10 @@ HEADERS += \
         label.h \
         ViewPanel3D.h  \
         SliceViewPanel.h \
-    niftiimagereader.h
+    niftiimagereader.h \
+    niiobject.h \
+    niilabel.h \
+    printutils.h
 
 
 
@@ -97,4 +103,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    resources.qrc
+    resources.qrc \
+    D:/projs/itksnap/itksnap/qdarkstyle/dark/style.qrc \
+    D:/projs/itksnap/itksnap/qdarkstyle/light/style.qrc

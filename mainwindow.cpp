@@ -37,6 +37,7 @@
 #include "viewpanel3d.h"
 #include "SliceViewPanel.h"
 #include "niftiimagereader.h"
+#include "niiobject.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -48,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->initMiddle();
     this->initRight();
 
-
+    this->selectedOrgan = nullptr;
     vtkNew<vtkGenericOpenGLRenderWindow> window;
     this->view3d->setRenderWindow(window.Get());
 
@@ -126,10 +127,9 @@ void MainWindow::initLeft(){
     QVBoxLayout* organLabelLayout = new QVBoxLayout(this->organLable);
     organLabelLayout->setMargin(0);
     organLabelLayout->setSpacing(0);
-    qDebug() << ui->leftLayout->children().size();
 
+    /* // 预先设置的标签
     QStringList colorNames = QColor::colorNames();
-
     for(int i=0; i < 10; i++){
 
         QColor color(colorNames[i]);
@@ -139,7 +139,9 @@ void MainWindow::initLeft(){
         qDebug() << i << widget << "-th label created!";
     }
     organLabelLayout->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    */
 
+    /*
     this->other = new QGroupBox();
     QVBoxLayout* otherLayout = new QVBoxLayout(this->other);
     otherLayout->addWidget(new QLabel("OTHER"));
@@ -148,9 +150,13 @@ void MainWindow::initLeft(){
     otherLayout->addWidget(colorWheel);
 
     connect(colorWheel, SIGNAL(colorChange(const QColor&)), this, SLOT(colorwheel(const QColor&)));
-
-    toolBox->addItem(this->organLable, "器官标签");
     toolBox->addItem(this->other, "其他");
+    */
+    //this->organLable->setMinimumHeight(800);
+    toolBox->setMinimumHeight(600);
+    toolBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);  // setMinimumHeight(800);
+    toolBox->addItem(this->organLable, "器官标签");
+
 
 
 }
@@ -222,14 +228,32 @@ void MainWindow::loadDataset(QString filePath){
     // Read the file
     reader->Update();
 
+    NIIObject *mask = new NIIObject(filePath.toStdString());
+    mask->surfaceRendering(this->m_renderer);
+    this->m_renderer->ResetCamera();
+    this->m_renderer->Render();
+
+    QVBoxLayout* organLabelLayout = dynamic_cast<QVBoxLayout*>(this->organLable->layout());
+    clearLayout(organLabelLayout);
+    for(int i = 0; i < mask->m_labels->length(); i++){
+        organLabelLayout->addWidget(mask->m_labels->at(i)->m_rgba);
+    }
+    organLabelLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    // 将LabelEditorDialog 的信后 和 NIIObject 的槽 连接起来
+    // 当标签的颜色或透明度改变时修改可视化对象的颜色和透明度
+
+    LabelEditorDialog *labelEditor = mask->m_labels->at(0)->m_rgba->labelEditor;
+    connect(labelEditor, SIGNAL(opacityChanged(int, int)), mask, SLOT(changeSurfaceOpacity(int, int)));
+    connect(labelEditor, SIGNAL(colorChanged(int, int, int, int, int)), mask, SLOT(changeSurfaceColor(int, int, int, int, int)));
+
     // Add data set to 3D view
-    vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
+    /*vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
     if (dataSet != nullptr) {
         vtkImageData* data = reader->GetOutput();//->GetScalarRange();
         double* range = data->GetScalarRange();
         qDebug() << "Scalar range is "<< range[0] << " " << range[1];
         this->addDataset(reader);
-    }
+    }*/
 }
 
 

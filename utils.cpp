@@ -37,7 +37,7 @@ vtkLookupTable* createColorTable(int min, int max){
     QStringList colorNames = QColor::colorNames();
     double r, g, b, opacity;
 
-    for(int i=1; i < n; i++){
+    for(int i=0; i < n; i++){
         if( i < PREDEFINED_COLOR_NUM){
             r = PREDEFINED_COLOR[i][0];
             g = PREDEFINED_COLOR[i][1];
@@ -46,13 +46,13 @@ vtkLookupTable* createColorTable(int min, int max){
         }else{
             QColor color = QColor(colorNames[i]);
             QRgb rgb = (&color)->rgb();
-            r = qRed(rgb)/255;
-            g = qGreen(rgb)/255;
-            b = qBlue(rgb)/255;
-            opacity = 1 - i / n;
+            r = qRed(rgb);
+            g = qGreen(rgb);
+            b = qBlue(rgb);
+            opacity = 255*(1 - i / n);
         }
 
-        clut->SetTableValue(i, r, g, b, opacity);
+        clut->SetTableValue(i/255, r/255, g/255, b/255, opacity/255);
         qDebug() << r << ", " << g <<", " << b << ", " << opacity;
     }
 
@@ -77,6 +77,7 @@ vtkMarchingCubes* createSurfaces(vtkImageData* data){
     double* range = data->GetScalarRange();
     int min = int(range[0]), max = int(range[1]);
     int n = max - min + 1;
+    surface->SetNumberOfContours(n);
     for(int i = 0; i < n; i++){
        surface->SetValue(i, min + i);
     }
@@ -122,62 +123,35 @@ vtkActor* createActor(vtkMapper* mapper){
     return actor;
 }
 
-/*
-#include <itkExtractImageFilter.h>
+void clearLayout(QLayout* layout){
+    QLayoutItem *child;
+    while((child = layout->takeAt(0)) != nullptr){
+        if(child->widget()){
+            child->widget()->setParent(nullptr);
+        } else if(child->layout()){
+            clearLayout(child->layout());
+        }
 
-template <typename _PixelType, uint _Dimension>
-SliceExtractor<_PixelType, _Dimension>::SliceExtractor(){
-
+        delete child;
+    }
 }
 
-
-template <typename _PixelType, uint _Dimension>
-typename SliceExtractor<_PixelType, _Dimension>::ImageType::Pointer
-SliceExtractor<_PixelType, _Dimension>::extractSlice(ReaderType* reader){
-    ImageType::Pointer input_data = reader->GetOutput();
-    ImageType::RegionType inputRegion =	input_data->GetLargestPossibleRegion();
-
-    ImageType::SizeType size = inputRegion.GetSize();
-    size[2] = 0;// 提取垂直于Z轴的切片（XYZ轴随意）
-
-    // 设置切片在Z轴的位置及切片大小与起始索引
-    ImageType::IndexType start = inputRegion.GetIndex();
-    const unsigned int sliceNumber = 2;
-    start[2] = sliceNumber;
-
-    ImageType::RegionType desiredRegion;
-    //无聊的话可以试试自己改变size和start，温馨提示：中间有坑，新手司机请注意路况
-    desiredRegion.SetSize(  size  );
-    desiredRegion.SetIndex( start );
-
-    // 创建提取图像滤波器
-    typedef itk::ExtractImageFilter< ImageType, ImageType > FilterType;
-    FilterType::Pointer filter = FilterType::New();
-    filter->SetInput( input_data);
-    // 设置提取切片区域
-    filter->SetExtractionRegion( desiredRegion );
-
-    ImageType::Pointer outputData = filter->GetOutput();
-
-    return outputData;
-}
-*/
 
 const int PREDEFINED_COLOR_NUM = 14;
-const double PREDEFINED_COLOR[PREDEFINED_COLOR_NUM][4] = {{0., 0., 0., 0.},
-                                {1., 0., 0., 1.},
-                                {0., 1., 0., 1.},
-                                {0., 0., 1., 1.},
-                                {1., 1., 0., 1.},
-                                {0, 1, 1, 1},
-                                {1., 0., 1., 1},
-                                {255/255., 239/255., 213/255., 1.},
-                                {0., 0., 205/255., 1.},
-                                {205/255, 133/255., 63/255., 1.},
-                                {210/255., 180/255., 140/255., 1.},
-                                {102/255., 205/255., 170/255., 1.},
-                                {0., 0., 128/255., 1.},
-                                {0., 139/255., 139/255., 1.}};
+const int PREDEFINED_COLOR[PREDEFINED_COLOR_NUM][4] = {{0, 0, 0, 0},
+                                {255, 0, 0, 255},
+                                {0, 255, 0, 255},
+                                {0, 0, 255, 255},
+                                {255, 255, 0, 255},
+                                {0, 255, 255, 255},
+                                {255, 0, 255, 255},
+                                {25, 239, 213, 255},
+                                {0, 0, 205, 255},
+                                {205, 133, 63, 255},
+                                {210, 180, 140, 255},
+                                {102, 205, 170, 255},
+                                {0, 0, 128, 255},
+                                {0, 139, 139, 255}};
 
 QHash<QString, QString> dicom_tag = {
     {"Image Type", "0008|0008"},

@@ -46,6 +46,9 @@ LabelEditorDialog::LabelEditorDialog(QWidget *parent) :
     m_LabelListFilterModel->setFilterKeyColumn(-1);
     ui->lvLabels->setModel(m_LabelListFilterModel);
 
+    // 隐藏左侧的标签选择栏
+    this->ui->groupBox_3->setVisible(false);
+
     // 信号与槽
     connect(this->ui->inColorWheel, SIGNAL(colorChange(const QColor &)), this, SLOT(inColorWheelChanged(const QColor &)));
 }
@@ -82,6 +85,7 @@ void LabelEditorDialog::on_btnNew_clicked()
   row.append(new QStandardItem("red"));
   model->appendRow(row);
   this->ui->lvLabels->setModel(model);
+  this->selectLabelIndex = -1;
 }
 
 void LabelEditorDialog::on_btnDuplicate_clicked()
@@ -133,20 +137,37 @@ void LabelEditorDialog::on_actionShow_all_labels_in_3D_window_triggered()
 }
 
 void LabelEditorDialog::inColorWheelChanged(const QColor &color){
-    qDebug() << "变色 " << color;
     QRgb rgb = color.rgb();
-    int r = qRed(rgb), g = qGreen(rgb), b = qBlue(rgb);
+    int r = qRed(rgb), g = qGreen(rgb), b = qBlue(rgb), a = qAlpha(rgb);
     this->ui->inRed->setValue(r);
     this->ui->inGreen->setValue(g);
     this->ui->inBlue->setValue(b);
     QString style = QString().sprintf("background-color:rgb(%d,%d,%d);", r, g, b);
     this->ui->btnLabelColor->setStyleSheet(style);
-
+    emit colorChanged(this->selectLabelIndex, r, g, b, a);
 }
 
 void LabelEditorDialog::on_inLabelOpacitySlider_valueChanged(int value)
 {
-    int opacity = this->ui->inLabelOpacitySlider->value();
-    qDebug() << "opacity is " << opacity;
+    //int opacity = this->ui->inLabelOpacitySlider->value();
+    //qDebug() << "opacity is " << opacity;
+    this->ui->inLabelOpacitySpinner->setValue(value);
+    emit opacityChanged(this->selectLabelIndex, value);
+}
+
+void LabelEditorDialog::on_inLabelOpacitySpinner_valueChanged(int value)
+{
+    this->ui->inLabelOpacitySlider->setValue(value);
+    emit opacityChanged(this->selectLabelIndex, value);
+}
+
+void LabelEditorDialog::setColor(QColor *color){
+    this->ui->inColorWheel->setColor(*color);
+}
+
+void LabelEditorDialog::setOpacity(int opacity){
+    this->ui->inLabelOpacitySlider->setValue(opacity);
     this->ui->inLabelOpacitySpinner->setValue(opacity);
 }
+
+

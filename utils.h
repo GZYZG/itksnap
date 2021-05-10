@@ -11,6 +11,9 @@
 #include <vtkCommand.h>
 #include <vtkSliderWidget.h>
 #include <vtkSliderRepresentation2D.h>
+#include <vtkDiscreteMarchingCubes.h>
+#include <vtkDecimatePro.h>
+#include <QLayout>
 
 static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode);
 
@@ -28,7 +31,11 @@ vtkPolyDataMapper* createMapper(vtkAlgorithmOutput* data);
 
 vtkActor* createActor(vtkMapper* mapper);
 
+vtkDecimatePro* create_polygon_reducer(vtkDiscreteMarchingCubes* extractor);
+
 void create2DITKImageReader(std::string type);
+
+void clearLayout(QLayout* layout);
 
 class vtkSliderCallback : public vtkCommand
 {
@@ -51,7 +58,7 @@ public:
 
 
 extern const int PREDEFINED_COLOR_NUM;
-extern const double PREDEFINED_COLOR[][4];
+extern const int PREDEFINED_COLOR[][4];  // 预定义14种颜色。采用rgba定义颜色，每个分量取值为0~255
 extern QHash<QString, QString> dicom_tag;
 
 #endif // UTILS_H

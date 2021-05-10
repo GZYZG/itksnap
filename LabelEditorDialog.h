@@ -20,6 +20,10 @@ public:
   ~LabelEditorDialog();
 
   void SetModel(LabelEditorModel *model);
+  void setColor(QColor* color);
+  void setOpacity(int opacity);
+
+  int selectLabelIndex;
 
 private slots:
   void on_btnClose_clicked();
@@ -47,6 +51,13 @@ private slots:
   void inColorWheelChanged(const QColor &);
 
   void on_inLabelOpacitySlider_valueChanged(int value);
+
+  void on_inLabelOpacitySpinner_valueChanged(int value);
+
+
+signals:
+  void opacityChanged(int index, int opacity);
+  void colorChanged(int index, int r, int g, int b, int a);
 
 private:
   LabelEditorModel *m_Model;

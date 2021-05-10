@@ -18,11 +18,12 @@ public:
     uint index;
 
     QString organName;
-    float opacity;
+    //float opacity;
     QLabel* nameLabel;
     QPushButton* colorLabel;
     QPushButton* opacityLabel;
     QLayout* layout;
+    int *rgba;   // 0~255
 
 
     OrganLabelEditor(QWidget* parent=0);
@@ -30,6 +31,12 @@ public:
     OrganLabelEditor(QString organName, QColor* color, QWidget* parent=0);
 
     ~OrganLabelEditor();
+
+    void setOpacity(int opacity);
+    void setColor(int r, int g, int b, int a);
+
+    int getOpacity();
+    int* getColor();
 
 public slots:
     void organColorLabelClicked(bool);

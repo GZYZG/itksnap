@@ -346,10 +346,16 @@ QGroupBox::title {
          <item row="3" column="3">
           <widget class="QPushButton" name="btnLabelColor">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
            </property>
            <property name="styleSheet">
             <string notr="true">background-color:rgb(255, 0, 0)</string>

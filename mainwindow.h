@@ -16,6 +16,7 @@
 #include <QVTKOpenGLWidget.h>
 
 #include "SliceViewPanel.h"
+#include "organlabeleditor.h"
 
 // 定义独立于实现的类名
 typedef QGroupBox OrganLabelContainer ;
@@ -34,6 +35,7 @@ public:
     QGroupBox* other;
     QVTKOpenGLWidget* view3d;
     SliceViewPanel *sliceView1, *sliceView2, *sliceView3;
+    OrganLabelEditor* selectedOrgan;
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

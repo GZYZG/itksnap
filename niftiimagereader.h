@@ -185,9 +185,9 @@ public:
         sliderRep->GetTubeProperty()->SetColor(1, 1, 0);//yellow
         sliderRep->GetCapProperty()->SetColor(1, 1, 0);//yellow
         sliderRep->GetPoint1Coordinate()->SetCoordinateSystemToDisplay();
-        sliderRep->GetPoint1Coordinate()->SetValue(40, 40);
+        sliderRep->GetPoint1Coordinate()->SetValue(10, 10);
         sliderRep->GetPoint2Coordinate()->SetCoordinateSystemToDisplay();
-        sliderRep->GetPoint2Coordinate()->SetValue(500, 40);
+        sliderRep->GetPoint2Coordinate()->SetValue(400, 10);
         vtkSmartPointer<vtkSliderWidget> sliderWidget =
             vtkSmartPointer<vtkSliderWidget>::New();
         sliderWidget->SetInteractor(rwi);
