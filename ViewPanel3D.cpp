@@ -38,6 +38,7 @@ ViewPanel3D::ViewPanel3D(QWidget *parent) :
   m_DropMenu->addSeparator();
   m_DropMenu->addAction(ui->actionClear_Rendering);
 
+  this->expanded = false;
   // Make the actions globally accessible
   this->addActions(m_DropMenu->actions());
 }
@@ -166,6 +167,15 @@ void ViewPanel3D::on_btnExpand_clicked()
 
   // Apply this layout
   dlm->GetViewPanelLayoutModel()->SetValue(layout);*/
+    QIcon icon;
+    if(expanded){
+        icon.addFile(QString::fromUtf8(":/new/Resources/dl_3d.png"), QSize(), QIcon::Normal, QIcon::Off);
+    } else{
+        icon.addFile(QString::fromUtf8(":/new/Resources/dl_fourviews.png"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    this->ui->btnExpand->setIcon(icon);
+    emit btnExpandClicked(expanded);
+    expanded = !expanded;
 }
 
 void ViewPanel3D::onTimer()

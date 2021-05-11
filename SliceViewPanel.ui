@@ -838,7 +838,7 @@ p, li { white-space: pre-wrap; }
        <widget class="QLabel" name="lblSliceInfo">
         <property name="minimumSize">
          <size>
-          <width>56</width>
+          <width>64</width>
           <height>0</height>
          </size>
         </property>
@@ -877,7 +877,7 @@ p, li { white-space: pre-wrap; }
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
-       <widget class="QVTKOpenGLWidget" name="slice"/>
+       <widget class="QVTKOpenGLStereoWidget" name="slice"/>
       </item>
      </layout>
     </widget>
@@ -1195,9 +1195,9 @@ p, li { white-space: pre-wrap; }
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKOpenGLWidget</class>
+   <class>QVTKOpenGLStereoWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>qvtkopenglwidget.h</header>
+   <header>qvtkopenglstereowidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>

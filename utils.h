@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <QFileDialog>
+#include <QLayout>
+#include <QMouseEvent>
+
 #include <vtkLookupTable.h>
 #include <vtkImageData.h>
 #include <vtkMarchingCubes.h>
@@ -13,7 +16,9 @@
 #include <vtkSliderRepresentation2D.h>
 #include <vtkDiscreteMarchingCubes.h>
 #include <vtkDecimatePro.h>
-#include <QLayout>
+#include <vtkCommand.h>
+#include <vtkRenderWindow.h>
+
 
 static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode);
 
@@ -44,11 +49,26 @@ public:
     {
         return new vtkSliderCallback;
     }
-    virtual void Execute(vtkObject *caller, unsigned long, void*)
+    virtual void Execute(vtkObject *caller, unsigned long eventId, void* callData)
     {
-        vtkSliderWidget *sliderWidget =
-            reinterpret_cast<vtkSliderWidget*>(caller);
-        this->viewer->SetSlice(static_cast<vtkSliderRepresentation *>(sliderWidget->GetRepresentation())->GetValue());
+        if(eventId == vtkCommand::InteractionEvent){
+            std::cout << "Excute is called... caller=" << caller->GetClassName() << " EventId=InteractionEvent" << endl;
+        } else if(eventId == vtkCommand::MouseWheelForwardEvent){
+            //int index = viewer->GetSlice();
+            //this->viewer->SetSlice(index+50);
+            //viewer->Render();
+            //viewer->GetRenderWindow()->Render();
+            //std::cout << "Excute is called... slice=" << viewer->GetSlice() << " EventId=MouseWheelForwardEvent" << endl;
+        } else if(eventId == vtkCommand::MouseWheelBackwardEvent){
+
+            //int index = viewer->GetSlice();
+            //this->viewer->SetSlice(index-1);
+            //std::cout << "Excute is called... slice=" << viewer->GetSlice() << " EventId=MouseWheelBackwardEvent" << endl;
+        } else if(eventId == vtkCommand::LeftButtonPressEvent){
+            std::cout << "Excute is called... caller=" << caller->GetClassName() << " EventId=LeftButtonPressEvent callData="
+                      << callData << endl;
+        }
+
     }
     vtkSliderCallback() {}
     vtkSmartPointer<vtkImageViewer2> viewer = nullptr;

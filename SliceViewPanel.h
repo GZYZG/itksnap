@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QVTKOpenGLWidget.h>
 
+#include <vtkImageViewer2.h>
+
 class QMenu;
 
 namespace Ui {
@@ -17,6 +19,8 @@ class SliceViewPanel : public QWidget
   Q_OBJECT
 
 public:
+  vtkImageViewer2* sliceViewer;
+
   explicit SliceViewPanel(QWidget *parent = 0);
   ~SliceViewPanel();
 
@@ -33,6 +37,11 @@ public:
 
   QVTKOpenGLWidget * getVTKView();
 
+  void setInSlicePositinRange(int min, int max);
+  void setInSlicePositinValue(int value);
+  void setSliceViewer(vtkImageViewer2* viewer);
+
+  void setExpandBtnOriginIcon(std::string iconPath);
 
 private slots:
   void on_actionAnnotationEdit_triggered();
@@ -72,6 +81,9 @@ private slots:
 
   void on_actionAnnotationPrevious_triggered();
 
+signals:
+  void btnExpandClicked(bool, SliceViewPanel*);
+
 private:
   Ui::SliceViewPanel *ui;
 
@@ -101,6 +113,9 @@ private:
   // Index of the panel
   unsigned int m_Index;
 
+  bool expanded;
+  std::string originalIconPath;
+
   void SetActiveMode(QWidget *mode, bool clearChildren = true);
 
   /**
@@ -119,6 +134,7 @@ private:
 
   /** Update the expand view / contract view button based on the state */
   void UpdateExpandViewButton();
+
 
 };
 

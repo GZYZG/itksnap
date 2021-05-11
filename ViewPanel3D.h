@@ -10,6 +10,7 @@
 #include <QFutureWatcher>
 #include <QWidget>
 #include <QVTKOpenGLWidget.h>
+#include <QToolButton>
 
 
 namespace Ui {
@@ -38,6 +39,7 @@ public:
 signals:
 
   void renderProgress(int progress);
+  void btnExpandClicked(bool);
 
 private slots:
   //virtual void onModelUpdate(const EventBucket &bucket);
@@ -91,6 +93,9 @@ private:
 
   // Elapsed time since begin of render operation
   int m_RenderElapsedTicks;
+
+  // 是否已经扩展
+  bool expanded;
 
   //typedef itk::MemberCommand<ViewPanel3D> CommandType;
   //SmartPtr<CommandType> m_RenderProgressCommand;

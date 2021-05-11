@@ -33,10 +33,19 @@
     </sizepolicy>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetMinAndMaxSize</enum>
+    </property>
     <item>
-     <layout class="QHBoxLayout" name="Layout" stretch="2,8,4">
+     <layout class="QHBoxLayout" name="Layout" stretch="2,8,6">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinAndMaxSize</enum>
+      </property>
       <item>
        <layout class="QVBoxLayout" name="leftLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
         <item>
          <widget class="QLabel" name="label_2">
           <property name="sizePolicy">
@@ -66,7 +75,11 @@
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="middleLayout"/>
+       <layout class="QVBoxLayout" name="middleLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
+       </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="rightLayout"/>

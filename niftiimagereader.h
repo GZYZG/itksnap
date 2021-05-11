@@ -22,6 +22,7 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <QVTKOpenGLWidget.h>
 
 #include "utils.h"
 
@@ -147,7 +148,7 @@ public:
         return flip1->GetOutput();
     }
 
-    void show3dImage(std::string type, typename ImageType::Pointer img, vtkRenderWindow* window)
+    vtkImageViewer2* show3dImage(std::string type, typename ImageType::Pointer img, vtkRenderWindow* window)
     {
         vtkSmartPointer<vtkImageViewer2> viewer =
             vtkSmartPointer<vtkImageViewer2>::New();
@@ -166,20 +167,11 @@ public:
             viewer->SetSliceOrientationToXZ();
         } else {
             std::cerr << "请设置正确的切片查看方向，可选值：XY, YZ, XZ" << endl;
-            return;
+            return nullptr;
         }
 
         viewer->Render();
         viewer->GetRenderer()->SetBackground(0, 0, 0);
-        viewer->GetRenderWindow()->SetWindowName("ImageViewer2D");
-
-        vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
-            vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-        vtkSmartPointer<vtkRenderWindowInteractor> rwi =
-            vtkSmartPointer<vtkRenderWindowInteractor>::New();
-        //设置交互属性
-        viewer->SetupInteractor(rwi);
-        //viewer->GetRenderer()->GetRenderWindow()->GetInteractor()->SetInteractorStyle(style);
 
         vtkSmartPointer<vtkSliderRepresentation2D> sliderRep =
             vtkSmartPointer<vtkSliderRepresentation2D>::New();
@@ -198,40 +190,48 @@ public:
         sliderRep->GetPoint2Coordinate()->SetValue(400, 10);
         vtkSmartPointer<vtkSliderWidget> sliderWidget =
             vtkSmartPointer<vtkSliderWidget>::New();
-        sliderWidget->SetInteractor(rwi);
+        sliderWidget->SetInteractor(window->GetInteractor());
         sliderWidget->SetRepresentation(sliderRep);
         sliderWidget->SetAnimationModeToAnimate();
         sliderWidget->EnabledOn();
+        sliderWidget->SetDefaultRenderer(viewer->GetRenderer());
 
         vtkSmartPointer<vtkSliderCallback> callback =
             vtkSmartPointer<vtkSliderCallback>::New();
         callback->viewer = viewer;
 
-        sliderWidget->AddObserver(vtkCommand::InteractionEvent, callback);
-        vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
-        double axesSize[3] = { 100,100,100 };
-        axes->SetTotalLength(axesSize);
-        axes->SetConeRadius(0.1);
-        axes->SetShaftTypeToLine();
-        axes->SetAxisLabels(false);
-        viewer->GetRenderer()->AddActor(axes);
-        std:cout << "hahaha" << endl;
-        //rwi->Start();
+        window->GetInteractor()->AddObserver(vtkCommand::InteractionEvent, callback);
+        window->GetInteractor()->AddObserver(vtkCommand::MouseWheelForwardEvent, callback);
+        window->GetInteractor()->AddObserver(vtkCommand::MouseWheelBackwardEvent, callback);
+        window->GetInteractor()->AddObserver(vtkCommand::LeftButtonPressEvent, callback);
+
+        //window->GetInteractor()->AddObserver();
+        //            QVTKOpenGLStereoWidget
+//        vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
+//        double axesSize[3] = { 100,100,100 };
+//        axes->SetTotalLength(axesSize);
+//        axes->SetConeRadius(0.1);
+//        axes->SetShaftTypeToLine();
+//        axes->SetAxisLabels(false);
+//        viewer->GetRenderer()->AddActor(axes);
+        viewer->UpdateDisplayExtent();
         viewer->Render();
         window->Render();
+
+        return viewer;
     }
 
-    void show3dImage_XY(typename ImageType::Pointer img, vtkRenderWindow* window){
-        show3dImage("XY", img, window);
+    vtkImageViewer2* show3dImage_XY(typename ImageType::Pointer img, vtkRenderWindow* window){
+        return show3dImage("XY", img, window);
 
     }
 
-    void show3dImage_YZ(typename ImageType::Pointer img, vtkRenderWindow* window){
-        show3dImage("YZ", img, window);
+    vtkImageViewer2* show3dImage_YZ(typename ImageType::Pointer img, vtkRenderWindow* window){
+        return show3dImage("YZ", img, window);
     }
 
-    void show3dImage_XZ(typename ImageType::Pointer img, vtkRenderWindow* window){
-        show3dImage("XZ", img, window);
+    vtkImageViewer2* show3dImage_XZ(typename ImageType::Pointer img, vtkRenderWindow* window){
+        return show3dImage("XZ", img, window);
     }
 
 

@@ -132,6 +132,10 @@ SliceViewPanel::SliceViewPanel(QWidget *parent) :
   m_ContextToolButton->setMaximumSize(QSize(16,16));
   m_ContextToolButton->setPopupMode(QToolButton::InstantPopup);
   m_ContextToolButton->setStyleSheet("QToolButton::menu-indicator { image: none; }");*/
+
+  setSliceViewer(nullptr);
+  expanded = false;
+  this->ui->btnToggleLayout->setVisible(false);
 }
 
 SliceViewPanel::~SliceViewPanel()
@@ -147,6 +151,7 @@ void SliceViewPanel::on_inSlicePosition_valueChanged(int value)
   int pos = ui->inSlicePosition->value();
   int lim = ui->inSlicePosition->maximum();
   ui->lblSliceInfo->setText(QString("%1 of %2").arg(pos+1).arg(lim+1));
+  this->sliceViewer->SetSlice(value);
 }
 
 
@@ -327,6 +332,17 @@ void SliceViewPanel::on_btnExpand_clicked()
 
   // Apply this layout
   dlm->GetViewPanelLayoutModel()->SetValue(layout);*/
+    QIcon icon;
+    std::cout << originalIconPath << endl;
+    if(expanded){
+        icon.addFile(QString::fromStdString(originalIconPath), QSize(), QIcon::Normal, QIcon::Off);
+    } else{
+        icon.addFile(QString::fromUtf8(":/new/Resources/dl_fourviews.png"), QSize(), QIcon::Normal, QIcon::Off);
+    }
+    this->ui->btnExpand->setIcon(icon);
+
+    emit btnExpandClicked(expanded, this);
+    expanded = !expanded;
 }
 
 void SliceViewPanel::UpdateExpandViewButton()
@@ -471,4 +487,30 @@ void SliceViewPanel::on_actionAnnotationEdit_triggered()
 
 QVTKOpenGLWidget * SliceViewPanel::getVTKView(){
     return this->ui->slice;
+}
+
+void SliceViewPanel::setInSlicePositinRange(int min, int max){
+    this->ui->inSlicePosition->setMinimum(min);
+    this->ui->inSlicePosition->setMaximum(max);
+}
+
+void SliceViewPanel::setInSlicePositinValue(int value){
+    if(value<0) return;
+    this->ui->inSlicePosition->setValue(value);
+}
+
+void SliceViewPanel::setSliceViewer(vtkImageViewer2 *viewer){
+    if(viewer == nullptr)  return;
+    this->sliceViewer = viewer;
+    int index = viewer->GetSlice();
+    this->setInSlicePositinRange(viewer->GetSliceMin()+1, viewer->GetSliceMax()+1);
+    this->setInSlicePositinValue(index);
+
+}
+
+void SliceViewPanel::setExpandBtnOriginIcon(std::string iconPath){
+    QIcon icon;
+    icon.addFile(QString::fromStdString(iconPath), QSize(), QIcon::Normal, QIcon::Off);
+    this->ui->btnExpand->setIcon(icon);
+    originalIconPath = iconPath;
 }

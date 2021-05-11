@@ -47,6 +47,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->initLeft();
     this->initMiddle();
+
+//    std::cout << this->ui->leftLayout->parent()->objectName().toStdString() << endl;
+//    this->ui->Layout->removeItem(this->ui->leftLayout);
+//    this->ui->Layout->setStretch(2, 0);
+//    std::cout << this->ui->centralWidget->layout()->objectName().toStdString() << endl;
+//    this->ui->Layout->setStretch(0, 2);
+//    this->ui->Layout->setStretch(1, 11);
+
     this->initRight();
 
     this->selectedOrgan = nullptr;
@@ -150,7 +158,8 @@ void MainWindow::initLeft(){
     */
     //this->organLable->setMinimumHeight(800);
     toolBox->setMinimumHeight(600);
-    toolBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);  // setMinimumHeight(800);
+    toolBox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding);  // setMinimumHeight(800);
+    toolBox->setMaximumWidth(400);
     toolBox->addItem(this->organLable, "器官标签");
 
 
@@ -159,35 +168,54 @@ void MainWindow::initLeft(){
 
 void MainWindow::initMiddle(){
     ViewPanel3D* panel = new ViewPanel3D();
-    this->ui->middleLayout->insertWidget(1, panel);
+    this->ui->middleLayout->addWidget(panel);
     this->view3d = panel->getView3d();
+    connect(panel, SIGNAL(btnExpandClicked(bool)), this, SLOT(expand3DView(bool)));
+    tridPanel = panel;
 }
 
 void MainWindow::initRight(){
     SliceViewPanel* slice1 = new SliceViewPanel();
     //QGraphicsView* slice1 = new QGraphicsView(this->centralWidget());
-    slice1->setObjectName("sliceViewT");  // Transverse section 横断面
+    slice1->setObjectName("sliceViewPanelA");  // Transverse section 横断面
+    slice1->setExpandBtnOriginIcon(":/new/Resources/dl_axial.png");
     SliceViewPanel* slice2 = new SliceViewPanel();
-    slice2->setObjectName("sliveViewS");  // Sagittal section 矢状面，把人体分成左右两面的解剖面
+    slice2->setObjectName("sliveViewPanelS");  // Sagittal section 矢状面，把人体分成左右两面的解剖面
+    slice2->setExpandBtnOriginIcon(":/new/Resources/dl_sagittal.png");
     SliceViewPanel* slice3 = new SliceViewPanel();
-    slice3->setObjectName("sliceViewC");  // Coronal section 冠状面，把人体分成前后两面的解剖面
+    slice3->setObjectName("sliceViewPanelC");  // Coronal section 冠状面，把人体分成前后两面的解剖面
+    slice3->setExpandBtnOriginIcon(":/new/Resources/dl_coronal.png");
 
-    this->ui->rightLayout->insertWidget(0, slice1);
-    this->ui->rightLayout->insertWidget(1, slice2);
-    this->ui->rightLayout->insertWidget(2, slice3);
+    this->ui->rightLayout->addWidget(slice1);
+    this->ui->rightLayout->addWidget(slice2);
+    this->ui->rightLayout->addWidget(slice3);
 
     this->sliceView1 = slice1;
     this->sliceView2 = slice2;
     this->sliceView3 = slice3;
 
     m_sliceRenderer1 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderWindowInteractor> rwi1 =
+        vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    this->sliceView1->getVTKView()->renderWindow()->SetInteractor(rwi1);
     this->sliceView1->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer1);
 
     m_sliceRenderer2 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderWindowInteractor> rwi2 =
+        vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    this->sliceView2->getVTKView()->renderWindow()->SetInteractor(rwi2);
     this->sliceView2->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer2);
 
     m_sliceRenderer3 = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderWindowInteractor> rwi3 =
+        vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    this->sliceView3->getVTKView()->renderWindow()->SetInteractor(rwi3);
     this->sliceView3->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer3);
+
+    // 连接按钮的信号与槽
+    connect(slice1, SIGNAL(btnExpandClicked(bool, SliceViewPanel*)), this, SLOT(expandSliceView(bool, SliceViewPanel*)));
+    connect(slice2, SIGNAL(btnExpandClicked(bool, SliceViewPanel*)), this, SLOT(expandSliceView(bool, SliceViewPanel*)));
+    connect(slice3, SIGNAL(btnExpandClicked(bool, SliceViewPanel*)), this, SLOT(expandSliceView(bool, SliceViewPanel*)));
 }
 
 
@@ -276,15 +304,62 @@ void MainWindow::loadMainImage(const QString &filePath){
     */
 
     //std::cout << reader->itkToVtk(slice) << endl;
-    std::cout << "XY" << endl;
-    reader->show3dImage_XY(reader->image, this->sliceView1->getVTKView()->renderWindow());
-    std::cout << "YZ" << endl;
-    reader->show3dImage_YZ(reader->image, this->sliceView2->getVTKView()->renderWindow());
-    std::cout << "XZ" << endl;
-    reader->show3dImage_XZ(reader->image, this->sliceView3->getVTKView()->renderWindow());
+    vtkImageViewer2* viewer;
+    viewer = reader->show3dImage_XY(reader->image, this->sliceView1->getVTKView()->renderWindow());
+    this->sliceView1->setSliceViewer(viewer);
+
+    viewer = reader->show3dImage_YZ(reader->image, this->sliceView2->getVTKView()->renderWindow());
+    this->sliceView2->setSliceViewer(viewer);
+
+    viewerXZ = reader->show3dImage_XZ(reader->image, this->sliceView3->getVTKView()->renderWindow());
+    this->sliceView3->setSliceViewer(viewer);
 
     //std::cout << slices->GetLargestPossibleRegion().Slice(0) << endl;
     //dynamic_cast<QGraphicsView*>(this->sliceView1)
+}
+
+void MainWindow::expand3DView(bool expanded){
+    int stretch;
+
+    if(expanded){
+        stretch = 4;
+        this->sliceView1->show();
+        this->sliceView2->show();
+        this->sliceView3->show();
+        std::cout << "3dview is shrinked" << endl;
+    } else{
+        stretch = 0;
+        this->sliceView1->hide();
+        this->sliceView2->hide();
+        this->sliceView3->hide();
+
+//        std::cout << "3dview is expnded children num=" << children.length() << endl;
+    }
+    this->ui->Layout->setStretch(2, stretch);
+
+}
+
+void MainWindow::expandSliceView(bool expanded, SliceViewPanel* slicePanel){
+    QString name = slicePanel->objectName();
+    QList<SliceViewPanel*> list;
+    list << this->sliceView1 << this->sliceView2 << this->sliceView3;
+
+    int stretch = expanded ? 8 : 0;
+    this->ui->Layout->setStretch(1, stretch);
+    this->tridPanel->setVisible(expanded);
+
+    list.removeOne(slicePanel);
+    this->ui->Layout->setStretch(2, 16 - 2 - stretch);
+    std::cout << "hahaha " << expanded << " list len=" << list.length() << endl;
+    for(int i=0; i < list.length(); i++){
+        std::cout << "set " << list.at(i)->objectName().toStdString() << " " << expanded << endl;
+        list.at(i)->setVisible(expanded);
+    }
+
+//    if(!expanded)
+//        slicePanel->setVisible(!expanded);
+
+
 }
 
 
