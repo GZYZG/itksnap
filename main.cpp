@@ -4,7 +4,7 @@
 #include <QTextStream>
 
 #include <vtkAutoInit.h>
-VTK_MODULE_INIT(vtkRenderingOpenGL2);//可能是vtkRenderingOpenGL,都试试 通过就行了
+VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkInteractionStyle);
 
 
@@ -16,11 +16,10 @@ int main(int argc, char *argv[])
 
     if (!f.exists())   {
         printf("Unable to set stylesheet, file not found\n");
-    }
-    else   {
+    } else {
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
-        qApp->setStyleSheet(ts.readAll());
+        w.setStyleSheet(ts.readAll());
     }
     w.show();
 

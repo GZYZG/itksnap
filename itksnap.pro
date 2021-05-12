@@ -31,11 +31,8 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         organlabeleditor.cpp \
-        colorlisteditor.cpp \
-        window.cpp  \
         ColorWheel.cpp \
         LabelEditorDialog.cpp \
-        abstractmodel.cpp \
         utils.cpp \
         label.cpp  \
         LabelEditorDialog.cpp  \
@@ -49,11 +46,8 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
         organlabeleditor.h \
-        colorlisteditor.h  \
-        window.h  \
         ColorWheel.h  \
         LabelEditorDialog.h \
-        abstractmodel.h \
         utils.h \
         label.h \
         ViewPanel3D.h  \
@@ -104,5 +98,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resources.qrc \
-    D:/projs/itksnap/itksnap/qdarkstyle/dark/style.qrc \
-    D:/projs/itksnap/itksnap/qdarkstyle/light/style.qrc
+    D:/projs/itksnap/itksnap/qdarkstyle/light/style.qrc \
+    D:/projs/itksnap/itksnap/qdarkstyle/dark/style.qrc
+

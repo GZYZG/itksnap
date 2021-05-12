@@ -29,7 +29,7 @@ public:
   explicit ViewPanel3D(QWidget *parent = 0);
   ~ViewPanel3D();
 
-  QVTKOpenGLWidget* getView3d();
+  QVTKOpenGLStereoWidget* getView3d();
 
   // Register with the global model
   //void Initialize(GlobalUIModel *model);

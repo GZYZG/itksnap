@@ -125,15 +125,19 @@ vtkActor* createActor(vtkMapper* mapper){
 
 void clearLayout(QLayout* layout){
     QLayoutItem *child;
+    //std::cout << "clear start " << endl;
     while((child = layout->takeAt(0)) != nullptr){
         if(child->widget()){
+            //std::cout << "removing " << child->widget()->objectName().toStdString() << endl;
             child->widget()->setParent(nullptr);
         } else if(child->layout()){
             clearLayout(child->layout());
         }
 
         delete child;
+
     }
+    //std::cout << "clear finish " << endl;
 }
 
 
@@ -152,6 +156,16 @@ const int PREDEFINED_COLOR[PREDEFINED_COLOR_NUM][4] = {{0, 0, 0, 0},
                                 {102, 205, 170, 255},
                                 {0, 0, 128, 255},
                                 {0, 139, 139, 255}};
+
+const std::string CNLABELNAMES[] = {"±³¾°", "Æ¢", "ÓÒÉö", "×óÉö",
+                                         "µ¨ÄÒ", "Ê³¹Ü", "¸ÎÔà", "Î¸",
+                                         "´ó¶¯Âö", "ÏÂÇ»¾²Âö", "ÃÅ¾²ÂöºÍÆ¢¾²Âö", "ÒÈÏÙ",
+                                         "ÓÒÉöÉÏÏÙ", "×óÉöÉÏÏÙ"};
+
+const std::string ENLABELNAMES[] = {"BG", "spleen", "right kidney", "left kidney",
+                                           "gallbladder", "esophagus", "liver", "stomach",
+                                           "aorta", "inferior vena cava", "portal vein and splenic vein",  "pancreas",
+                                           "right adrenal gland", "left adrenal gland "};
 
 QHash<QString, QString> dicom_tag = {
     {"Image Type", "0008|0008"},

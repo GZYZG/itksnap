@@ -27,14 +27,17 @@ QColor ColorWheel::color()
 
 void ColorWheel::setColor(const QColor &color)
 {
+    //qDebug() << "in ColorWheel::setColor 0" ;
   if(color.hue() != current.hue()){
     hueChanged(color.hue());
     }
+  //qDebug() << "in ColorWheel::setColor 1" ;
 
   if( color.saturation() != current.saturation()
       || color.value() != current.value() ){
     svChanged(color);
     }
+  //qDebug() << "in ColorWheel::setColor 2" ;
 }
 
 
@@ -194,8 +197,9 @@ void ColorWheel::drawWheel(const QSize &newSize)
   painter.setBrush(brush);
   painter.drawEllipse(QPoint(0,0),r/2-margin,r/2-margin);
 
-  /* inner circle */
-  painter.setBrush(palette().background().color());
+  /* inner circle palette().background().color()*/
+  // 因为使用了外部样式文件，需要单独设置颜色
+  painter.setBrush(QColor::fromRgb(255, 255, 255));
   painter.drawEllipse(QPoint(0,0),r/2-margin-m_WheelWidth,r/2-margin-m_WheelWidth);
 
 

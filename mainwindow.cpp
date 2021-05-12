@@ -9,6 +9,7 @@
 #include <QImageReader>
 #include <QImageWriter>
 #include <QGraphicsView>
+#include <QThread>
 
 // vtk
 #include <vtkCamera.h>
@@ -30,11 +31,9 @@
 
 // 我的头文件
 #include "organlabeleditor.h"
-#include "colorlisteditor.h"
-#include "window.h"
 #include "ColorWheel.h"
 #include "utils.h"
-#include "viewpanel3d.h"
+#include "ViewPanel3D.h"
 #include "SliceViewPanel.h"
 #include "niftiimagereader.h"
 #include "niiobject.h"
@@ -47,19 +46,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->initLeft();
     this->initMiddle();
-
-//    std::cout << this->ui->leftLayout->parent()->objectName().toStdString() << endl;
-//    this->ui->Layout->removeItem(this->ui->leftLayout);
-//    this->ui->Layout->setStretch(2, 0);
-//    std::cout << this->ui->centralWidget->layout()->objectName().toStdString() << endl;
-//    this->ui->Layout->setStretch(0, 2);
-//    this->ui->Layout->setStretch(1, 11);
-
     this->initRight();
 
     this->selectedOrgan = nullptr;
+    this->segmentation = nullptr;
     vtkNew<vtkGenericOpenGLRenderWindow> window;
     this->view3d->setRenderWindow(window.Get());
+    labelEditor = new LabelEditorDialog(this);
 
     // Camera
     vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
@@ -124,46 +117,26 @@ void MainWindow::on_actionOpen_Segmentation_triggered(){
 
 void MainWindow::initLeft(){
     // 初始化左侧，加入各个标签，对应的颜色和透明度
-    this->toolBox = new QToolBox();
+    this->toolBox = new QToolBox(this->centralWidget());
+    this->toolBox->setObjectName("toolBox");
     ui->leftLayout->insertWidget(1, this->toolBox);
 
-    this->organLable = new OrganLabelContainer();
+    this->organLable = new OrganLabelContainer(this->toolBox);
+    this->organLable->setObjectName("organLabelContainer");
     QVBoxLayout* organLabelLayout = new QVBoxLayout(this->organLable);
     organLabelLayout->setMargin(0);
-    organLabelLayout->setSpacing(0);
-
-    /* // 预先设置的标签
-    QStringList colorNames = QColor::colorNames();
-    for(int i=0; i < 10; i++){
-
-        QColor color(colorNames[i]);
-        OrganLabelEditor* widget = new OrganLabelEditor("label-"+QString::number(i), &color);
-        //QLabel* widget = new QLabel("haha");
-        organLabelLayout->addWidget(widget);
-        qDebug() << i << widget << "-th label created!";
-    }
-    organLabelLayout->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    */
+    organLabelLayout->setSpacing(5);
 
     /*
     this->other = new QGroupBox();
     QVBoxLayout* otherLayout = new QVBoxLayout(this->other);
     otherLayout->addWidget(new QLabel("OTHER"));
-    otherLayout->addWidget(new Window());
-    ColorWheel* colorWheel = new ColorWheel();
-    otherLayout->addWidget(colorWheel);
-
-    connect(colorWheel, SIGNAL(colorChange(const QColor&)), this, SLOT(colorwheel(const QColor&)));
-    toolBox->addItem(this->other, "其他");
     */
     //this->organLable->setMinimumHeight(800);
     toolBox->setMinimumHeight(600);
-    toolBox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding);  // setMinimumHeight(800);
+    toolBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);  // setMinimumHeight(800);
     toolBox->setMaximumWidth(400);
     toolBox->addItem(this->organLable, "器官标签");
-
-
-
 }
 
 void MainWindow::initMiddle(){
@@ -175,42 +148,21 @@ void MainWindow::initMiddle(){
 }
 
 void MainWindow::initRight(){
-    SliceViewPanel* slice1 = new SliceViewPanel();
-    //QGraphicsView* slice1 = new QGraphicsView(this->centralWidget());
-    slice1->setObjectName("sliceViewPanelA");  // Transverse section 横断面
-    slice1->setExpandBtnOriginIcon(":/new/Resources/dl_axial.png");
-    SliceViewPanel* slice2 = new SliceViewPanel();
-    slice2->setObjectName("sliveViewPanelS");  // Sagittal section 矢状面，把人体分成左右两面的解剖面
-    slice2->setExpandBtnOriginIcon(":/new/Resources/dl_sagittal.png");
-    SliceViewPanel* slice3 = new SliceViewPanel();
-    slice3->setObjectName("sliceViewPanelC");  // Coronal section 冠状面，把人体分成前后两面的解剖面
-    slice3->setExpandBtnOriginIcon(":/new/Resources/dl_coronal.png");
+    SliceViewPanel* slice1 =  creataSliceViewPanel("sliceViewPanelA", ":/new/Resources/dl_axial.png");  // Transverse section 横断面
+    SliceViewPanel* slice2 = creataSliceViewPanel("sliveViewPanelS", ":/new/Resources/dl_sagittal.png");  // Sagittal section 矢状面，把人体分成左右两面的解剖面
+    SliceViewPanel* slice3 = creataSliceViewPanel("sliceViewPanelC", ":/new/Resources/dl_coronal.png");  // Coronal section 冠状面，把人体分成前后两面的解剖面
 
     this->ui->rightLayout->addWidget(slice1);
     this->ui->rightLayout->addWidget(slice2);
     this->ui->rightLayout->addWidget(slice3);
 
-    this->sliceView1 = slice1;
-    this->sliceView2 = slice2;
-    this->sliceView3 = slice3;
+    this->sliceViewPanelXY = slice1;
+    this->sliceViewPanelYZ = slice2;
+    this->sliceViewPanelXZ = slice3;
 
-    m_sliceRenderer1 = vtkSmartPointer<vtkRenderer>::New();
-    vtkSmartPointer<vtkRenderWindowInteractor> rwi1 =
-        vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    this->sliceView1->getVTKView()->renderWindow()->SetInteractor(rwi1);
-    this->sliceView1->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer1);
-
-    m_sliceRenderer2 = vtkSmartPointer<vtkRenderer>::New();
-    vtkSmartPointer<vtkRenderWindowInteractor> rwi2 =
-        vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    this->sliceView2->getVTKView()->renderWindow()->SetInteractor(rwi2);
-    this->sliceView2->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer2);
-
-    m_sliceRenderer3 = vtkSmartPointer<vtkRenderer>::New();
-    vtkSmartPointer<vtkRenderWindowInteractor> rwi3 =
-        vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    this->sliceView3->getVTKView()->renderWindow()->SetInteractor(rwi3);
-    this->sliceView3->getVTKView()->renderWindow()->AddRenderer(m_sliceRenderer3);
+    m_sliceRenderer1 = slice1->getRenderer();
+    m_sliceRenderer2 = slice2->getRenderer();
+    m_sliceRenderer3 = slice3->getRenderer();
 
     // 连接按钮的信号与槽
     connect(slice1, SIGNAL(btnExpandClicked(bool, SliceViewPanel*)), this, SLOT(expandSliceView(bool, SliceViewPanel*)));
@@ -229,58 +181,27 @@ void MainWindow::removeDataset(){
         }
     }
     this->view3d->renderWindow()->Render();
-}
 
-// 废弃
-void MainWindow::addDataset(vtkImageAlgorithm* reader){
-    vtkMarchingCubes* surfaces = createSurfaces(reader->GetOutput());
-    vtkSmoothPolyDataFilter* smoother = createSmoother(surfaces->GetOutputPort(), 50);
-    vtkPolyDataNormals* normals = createNormals(smoother->GetOutputPort());
-    vtkPolyDataMapper* mapper = createMapper(normals->GetOutputPort());
-    double* range = reader->GetOutput()->GetScalarRange();
-    mapper->SetScalarRange(range[0], range[1]);
-    vtkLookupTable* lut = createColorTable(int(range[0]), int(range[1]));
-    mapper->SetLookupTable(lut);
-    vtkActor* actor = createActor(mapper);
-    this->m_renderer->AddActor(actor);
-    this->m_renderer->ResetCamera(actor->GetBounds());
-
-    this->m_renderer->Render();
 }
 
 void MainWindow::loadSegmentation(QString filePath){
+    std::cout << "load thread:" << QThread::currentThreadId() << endl;
     this->removeDataset();
 
-    NIIObject *mask = new NIIObject(filePath.toStdString());
-    mask->surfaceRendering(this->m_renderer);
-    this->m_renderer->ResetCamera();
-    this->m_renderer->Render();
+    NIIObject *mask = new NIIObject(filePath.toStdString());  // 必须用new，否则当前函数推出后，进程对象会被销毁，子线程直接挂了！！！
+    if(this->segmentation)
+        delete this->segmentation;
 
-    QVBoxLayout* organLabelLayout = dynamic_cast<QVBoxLayout*>(this->organLable->layout());
-    clearLayout(organLabelLayout);
-    for(int i = 0; i < mask->m_labels->length(); i++){
-        organLabelLayout->addWidget(mask->m_labels->at(i)->m_rgba);
-    }
-    organLabelLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
-
-    // 将LabelEditorDialog 的信后 和 NIIObject 的槽 连接起来
-    // 当标签的颜色或透明度改变时修改可视化对象的颜色和透明度
-    LabelEditorDialog *labelEditor = mask->m_labels->at(0)->m_rgba->labelEditor;
-    connect(labelEditor, SIGNAL(opacityChanged(int, int)), mask, SLOT(changeSurfaceOpacity(int, int)));
-    connect(labelEditor, SIGNAL(colorChanged(int, int, int, int, int)), mask, SLOT(changeSurfaceColor(int, int, int, int, int)));
-
-    /* Add data set to 3D view
-    vtkNew<vtkNIFTIImageReader> reader;// = vtkSmartPointer<vtkNIFTIImageReader>::New();
-    reader->SetFileName(filePath.toStdString().c_str());
-    // Read the file
-    reader->Update();
-    vtkAlgorithmOutput* dataSet = reader->GetOutputPort();
-    if (dataSet != nullptr) {
-        vtkImageData* data = reader->GetOutput();//->GetScalarRange();
-        double* range = data->GetScalarRange();
-        qDebug() << "Scalar range is "<< range[0] << " " << range[1];
-        this->addDataset(reader);
-    }*/
+    this->segmentation = mask;
+    workerThread = new QThread;
+    mask->moveToThread(workerThread);
+    //connect(&workerThread, &QThread::finished, this, nullptr);
+    connect(this, SIGNAL(renderSegmentation(vtkRenderer*)), mask, SLOT(surfaceRendering(vtkRenderer*)));
+    connect(mask, SIGNAL(renderDone()), this, SLOT(segmentationRenderDone()));
+    workerThread->start();
+    emit renderSegmentation(this->m_renderer);
+    //mask->surfaceRendering(this->m_renderer);
+    //workerThread.wait();
 }
 
 
@@ -305,44 +226,31 @@ void MainWindow::loadMainImage(const QString &filePath){
 
     //std::cout << reader->itkToVtk(slice) << endl;
     vtkImageViewer2* viewer;
-    viewer = reader->show3dImage_XY(reader->image, this->sliceView1->getVTKView()->renderWindow());
-    this->sliceView1->setSliceViewer(viewer);
+    viewer = reader->show3dImage_XY(reader->image, this->sliceViewPanelXY->getVTKView()->renderWindow());
+    this->sliceViewPanelXY->setSliceViewer(viewer);
 
-    viewer = reader->show3dImage_YZ(reader->image, this->sliceView2->getVTKView()->renderWindow());
-    this->sliceView2->setSliceViewer(viewer);
+    viewer = reader->show3dImage_YZ(reader->image, this->sliceViewPanelYZ->getVTKView()->renderWindow());
+    this->sliceViewPanelYZ->setSliceViewer(viewer);
 
-    viewerXZ = reader->show3dImage_XZ(reader->image, this->sliceView3->getVTKView()->renderWindow());
-    this->sliceView3->setSliceViewer(viewer);
-
-    //std::cout << slices->GetLargestPossibleRegion().Slice(0) << endl;
-    //dynamic_cast<QGraphicsView*>(this->sliceView1)
+    viewerXZ = reader->show3dImage_XZ(reader->image, this->sliceViewPanelXZ->getVTKView()->renderWindow());
+    this->sliceViewPanelXZ->setSliceViewer(viewer);
 }
+
 
 void MainWindow::expand3DView(bool expanded){
-    int stretch;
+    int stretch = expanded ? 4 : 0;
 
-    if(expanded){
-        stretch = 4;
-        this->sliceView1->show();
-        this->sliceView2->show();
-        this->sliceView3->show();
-        std::cout << "3dview is shrinked" << endl;
-    } else{
-        stretch = 0;
-        this->sliceView1->hide();
-        this->sliceView2->hide();
-        this->sliceView3->hide();
-
-//        std::cout << "3dview is expnded children num=" << children.length() << endl;
-    }
+    this->sliceViewPanelXY->setVisible(expanded);
+    this->sliceViewPanelYZ->setVisible(expanded);
+    this->sliceViewPanelXZ->setVisible(expanded);
     this->ui->Layout->setStretch(2, stretch);
-
 }
+
 
 void MainWindow::expandSliceView(bool expanded, SliceViewPanel* slicePanel){
     QString name = slicePanel->objectName();
     QList<SliceViewPanel*> list;
-    list << this->sliceView1 << this->sliceView2 << this->sliceView3;
+    list << this->sliceViewPanelXY << this->sliceViewPanelYZ << this->sliceViewPanelXZ;
 
     int stretch = expanded ? 8 : 0;
     this->ui->Layout->setStretch(1, stretch);
@@ -350,22 +258,49 @@ void MainWindow::expandSliceView(bool expanded, SliceViewPanel* slicePanel){
 
     list.removeOne(slicePanel);
     this->ui->Layout->setStretch(2, 16 - 2 - stretch);
-    std::cout << "hahaha " << expanded << " list len=" << list.length() << endl;
     for(int i=0; i < list.length(); i++){
-        std::cout << "set " << list.at(i)->objectName().toStdString() << " " << expanded << endl;
         list.at(i)->setVisible(expanded);
     }
-
-//    if(!expanded)
-//        slicePanel->setVisible(!expanded);
-
-
 }
 
 
-void MainWindow::colorwheel(const QColor& color){
-    QRgb rgb = (&color)->rgb();
-    qDebug() << "hahah" << qRed(rgb) << ", " << qGreen(rgb) << ", " << qBlue(rgb);
+SliceViewPanel* MainWindow::creataSliceViewPanel(std::string objectName, std::string originalIconPath){
+    SliceViewPanel* panel = new SliceViewPanel();
+    panel->setExpandBtnOriginIcon(originalIconPath);
+    panel->setObjectName(QString::fromStdString(objectName));
+    vtkRenderer* renderer = vtkRenderer::New();
+    vtkSmartPointer<vtkRenderWindowInteractor> rwi =
+        vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    panel->getVTKView()->renderWindow()->SetInteractor(rwi);
+    panel->setRenderer(renderer);
+    return panel;
+}
+
+
+void MainWindow::segmentationRenderDone(){
+    if(workerThread->isRunning()){
+        workerThread->exit();
+    }
+    qDebug() << "MainWindow know renderer done, now in: " << QThread::currentThreadId();
+    this->m_renderer->ResetCamera();
+    this->m_renderer->Render();
+
+    NIIObject *mask = this->segmentation;
+
+    QVBoxLayout* organLabelLayout = dynamic_cast<QVBoxLayout*>(this->organLable->layout());
+    clearLayout(organLabelLayout);
+    for(int i = 0; i < mask->m_labels->length(); i++){
+        organLabelLayout->addWidget(mask->m_labels->at(i)->m_rgba);
+        mask->m_labels->at(i)->m_rgba->setLabelEditorDialog(labelEditor);
+    }
+    organLabelLayout->addItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    // 将LabelEditorDialog 的信后 和 NIIObject 的槽 连接起来
+    // 当标签的颜色或透明度改变时修改可视化对象的颜色和透明度
+    //LabelEditorDialog *labelEditor = mask->m_labels->at(0)->m_rgba->labelEditor;
+    connect(labelEditor, SIGNAL(opacityChanged(int, int)), mask, SLOT(changeSurfaceOpacity(int, int)));
+    connect(labelEditor, SIGNAL(colorChanged(int, int, int, int, int)), mask, SLOT(changeSurfaceColor(int, int, int, int, int)));
+
 }
 
 

@@ -272,6 +272,6 @@ void ViewPanel3D::on_actionClear_Rendering_triggered()
 }
 
 
-QVTKOpenGLWidget* ViewPanel3D::getView3d(){
+QVTKOpenGLStereoWidget* ViewPanel3D::getView3d(){
     return this->ui->view3d;
 }

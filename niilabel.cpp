@@ -46,6 +46,14 @@ int* NIILabel::getColor(){
 }
 
 NIILabel::~NIILabel(){
-
+    m_surfaceExtractor->Delete();
+    m_reducer->Delete();
+    m_smoother->Delete();
+    m_normals->Delete();
+    m_mapper->Delete();
+    m_actor->Delete();
+    delete m_rgba;
+    m_property->Delete();
+    //std::cout << "NIILabel deleted " << endl;
 }
 

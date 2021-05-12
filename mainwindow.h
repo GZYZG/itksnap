@@ -15,10 +15,13 @@
 #include <vtkImageAlgorithm.h>
 #include <QVTKOpenGLWidget.h>
 #include <vtkImageViewer2.h>
+#include <QVTKOpenGLStereoWidget.h>
 
 #include "SliceViewPanel.h"
 #include "organlabeleditor.h"
 #include "ViewPanel3D.h"
+#include "niiobject.h"
+#include "niftiimagereader.h"
 
 // 定义独立于实现的类名
 typedef QGroupBox OrganLabelContainer ;
@@ -36,10 +39,12 @@ public:
     OrganLabelContainer* organLable;  // 器官可视化设置面板
     QGroupBox* other;
     ViewPanel3D* tridPanel;
-    QVTKOpenGLWidget* view3d;
-    SliceViewPanel *sliceView1, *sliceView2, *sliceView3;
+    QVTKOpenGLStereoWidget* view3d;
+    SliceViewPanel *sliceViewPanelXY, *sliceViewPanelYZ, *sliceViewPanelXZ;
     vtkImageViewer2 *viewerXY, *viewerYZ, *viewerXZ;
     OrganLabelEditor* selectedOrgan;
+    NIIObject *segmentation;
+    LabelEditorDialog* labelEditor;
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -57,10 +62,14 @@ private slots:
     //void on_pushButton_clicked();
     void on_actionOpen_MainImage_triggered();
     void on_actionOpen_Segmentation_triggered();
-    void colorwheel(const QColor& color);
 
     void expand3DView(bool);
     void expandSliceView(bool, SliceViewPanel*);
+
+    void segmentationRenderDone();
+
+signals:
+    void renderSegmentation(vtkRenderer* renderer);
 
 private:
     Ui::MainWindow *ui;
@@ -68,6 +77,8 @@ private:
     vtkSmartPointer<vtkRenderer> m_sliceRenderer1;
     vtkSmartPointer<vtkRenderer> m_sliceRenderer2;
     vtkSmartPointer<vtkRenderer> m_sliceRenderer3;
+    SliceViewPanel* creataSliceViewPanel(std::string objectName, std::string originalIconPath);
+    QThread* workerThread;
 };
 
 #endif // MAINWINDOW_H

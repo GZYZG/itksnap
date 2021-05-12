@@ -5,9 +5,10 @@
 #include <QBitmap>
 #include <QToolButton>
 #include <QDebug>
-
 #include <QStackedLayout>
 #include <QMenu>
+
+#include <vtkRenderWindow.h>
 
 SliceViewPanel::SliceViewPanel(QWidget *parent) :
     QWidget(parent),
@@ -151,7 +152,9 @@ void SliceViewPanel::on_inSlicePosition_valueChanged(int value)
   int pos = ui->inSlicePosition->value();
   int lim = ui->inSlicePosition->maximum();
   ui->lblSliceInfo->setText(QString("%1 of %2").arg(pos+1).arg(lim+1));
-  this->sliceViewer->SetSlice(value);
+  // std::cout << value << endl;
+  if(this->sliceViewer)
+    this->sliceViewer->SetSlice(value);
 }
 
 
@@ -333,7 +336,7 @@ void SliceViewPanel::on_btnExpand_clicked()
   // Apply this layout
   dlm->GetViewPanelLayoutModel()->SetValue(layout);*/
     QIcon icon;
-    std::cout << originalIconPath << endl;
+    //std::cout << originalIconPath << endl;
     if(expanded){
         icon.addFile(QString::fromStdString(originalIconPath), QSize(), QIcon::Normal, QIcon::Off);
     } else{
@@ -485,8 +488,17 @@ void SliceViewPanel::on_actionAnnotationEdit_triggered()
   dialog->raise();*/
 }
 
-QVTKOpenGLWidget * SliceViewPanel::getVTKView(){
+QVTKOpenGLStereoWidget * SliceViewPanel::getVTKView(){
     return this->ui->slice;
+}
+
+void SliceViewPanel::setRenderer(vtkRenderer* renderer){
+    this->getVTKView()->renderWindow()->AddRenderer(renderer);
+    this->renderer = renderer;
+}
+
+vtkRenderer* SliceViewPanel::getRenderer(){
+    return renderer;
 }
 
 void SliceViewPanel::setInSlicePositinRange(int min, int max){

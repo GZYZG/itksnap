@@ -19,6 +19,7 @@ class SliceViewPanel : public QWidget
   Q_OBJECT
 
 public:
+  vtkRenderer* renderer;
   vtkImageViewer2* sliceViewer;
 
   explicit SliceViewPanel(QWidget *parent = 0);
@@ -35,18 +36,18 @@ public:
   // Callback for when the toolbar changes
   void SetMouseMotionTracking(bool enable);
 
-  QVTKOpenGLWidget * getVTKView();
+  QVTKOpenGLStereoWidget * getVTKView();
 
   void setInSlicePositinRange(int min, int max);
   void setInSlicePositinValue(int value);
   void setSliceViewer(vtkImageViewer2* viewer);
-
   void setExpandBtnOriginIcon(std::string iconPath);
+  void setRenderer(vtkRenderer* renderer);
+  vtkRenderer* getRenderer();
 
 private slots:
   void on_actionAnnotationEdit_triggered();
 
-private slots:
   void on_inSlicePosition_valueChanged(int value);
 
   void on_btnZoomToFit_clicked();

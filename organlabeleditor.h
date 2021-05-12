@@ -13,7 +13,7 @@ class OrganLabelEditor : public QWidget{
     Q_OBJECT
 public:
     static uint count;
-    static LabelEditorDialog* labelEditor;
+    LabelEditorDialog* labelEditor;
 
     uint index;
 
@@ -26,14 +26,14 @@ public:
     int *rgba;   // 0~255
 
 
-    OrganLabelEditor(QWidget* parent=0);
-    OrganLabelEditor(QString organName, QWidget* parent=0);
-    OrganLabelEditor(QString organName, QColor* color, QWidget* parent=0);
-
+    OrganLabelEditor(QWidget* parent=nullptr);
+    OrganLabelEditor(std::string organName, QWidget* parent=nullptr);
+    OrganLabelEditor(std::string organName, QColor* color, QWidget* parent=nullptr);
     ~OrganLabelEditor();
 
     void setOpacity(int opacity);
     void setColor(int r, int g, int b, int a);
+    void setLabelEditorDialog(LabelEditorDialog* dialog);
 
     int getOpacity();
     int* getColor();

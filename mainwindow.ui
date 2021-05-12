@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>ITK-Snap</string>
+   <string>医学图像三维可视化分析</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">

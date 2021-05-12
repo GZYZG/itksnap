@@ -80,5 +80,7 @@ public:
 extern const int PREDEFINED_COLOR_NUM;
 extern const int PREDEFINED_COLOR[][4];  // 预定义14种颜色。采用rgba定义颜色，每个分量取值为0~255
 extern QHash<QString, QString> dicom_tag;
+extern const std::string CNLABELNAMES[];
+extern const std::string ENLABELNAMES[];
 
 #endif // UTILS_H

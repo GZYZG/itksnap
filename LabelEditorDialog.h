@@ -22,7 +22,7 @@ public:
   void SetModel(LabelEditorModel *model);
   void setColor(QColor* color);
   void setOpacity(int opacity);
-
+  void setInLabelDescription(QString text);
   int selectLabelIndex;
 
 private slots:
@@ -34,7 +34,7 @@ private slots:
 
   void on_btnDelete_clicked();
 
-  void on_inLabelId_editingFinished();
+  //void on_inLabelId_editingFinished();
 
   void on_actionResetLabels_triggered();
 

@@ -46,8 +46,13 @@ LabelEditorDialog::LabelEditorDialog(QWidget *parent) :
     m_LabelListFilterModel->setFilterKeyColumn(-1);
     ui->lvLabels->setModel(m_LabelListFilterModel);
 
-    // 隐藏左侧的标签选择栏
+    // 隐藏暂时不显示的控件
     this->ui->groupBox_3->setVisible(false);
+    this->ui->btnNew->setVisible(false);
+    this->ui->btnDelete->setVisible(false);
+    this->ui->btnDuplicate->setVisible(false);
+
+    this->setWindowTitle(QApplication::translate("LabelEditorDialog", "设置器官显示效果", nullptr));
 
     // 信号与槽
     connect(this->ui->inColorWheel, SIGNAL(colorChange(const QColor &)), this, SLOT(inColorWheelChanged(const QColor &)));
@@ -100,11 +105,11 @@ void LabelEditorDialog::on_btnDelete_clicked()
 
 }
 
-void LabelEditorDialog::on_inLabelId_editingFinished()
+/*void LabelEditorDialog::on_inLabelId_editingFinished()
 {
   // Check if the new value is available
 
-}
+}*/
 
 void LabelEditorDialog::on_actionResetLabels_triggered()
 {
@@ -137,6 +142,7 @@ void LabelEditorDialog::on_actionShow_all_labels_in_3D_window_triggered()
 }
 
 void LabelEditorDialog::inColorWheelChanged(const QColor &color){
+    //qDebug() << "in inColorWheelChanged";
     QRgb rgb = color.rgb();
     int r = qRed(rgb), g = qGreen(rgb), b = qBlue(rgb), a = qAlpha(rgb);
     this->ui->inRed->setValue(r);
@@ -145,29 +151,41 @@ void LabelEditorDialog::inColorWheelChanged(const QColor &color){
     QString style = QString().sprintf("background-color:rgb(%d,%d,%d);", r, g, b);
     this->ui->btnLabelColor->setStyleSheet(style);
     emit colorChanged(this->selectLabelIndex, r, g, b, a);
+    //qDebug() << "leave inColorWheelChanged";
 }
 
 void LabelEditorDialog::on_inLabelOpacitySlider_valueChanged(int value)
 {
     //int opacity = this->ui->inLabelOpacitySlider->value();
-    //qDebug() << "opacity is " << opacity;
+    //qDebug() << "in  on_inLabelOpacitySlider_valueChanged" << value;
     this->ui->inLabelOpacitySpinner->setValue(value);
     emit opacityChanged(this->selectLabelIndex, value);
+    //qDebug() << "leave on_inLabelOpacitySlider_valueChanged" << value;
 }
 
 void LabelEditorDialog::on_inLabelOpacitySpinner_valueChanged(int value)
 {
+    //qDebug() << "in  on_inLabelOpacitySpinner_valueChanged" << value;
     this->ui->inLabelOpacitySlider->setValue(value);
     emit opacityChanged(this->selectLabelIndex, value);
+    //qDebug() << "leave on_inLabelOpacitySpinner_valueChanged" << value;
 }
 
 void LabelEditorDialog::setColor(QColor *color){
+    //qDebug() << "in setcolor";
+    //qDebug() << "this->ui->inColorWheel: " << this->ui->inColorWheel;
     this->ui->inColorWheel->setColor(*color);
+    //qDebug() << "leave setcolor";
 }
 
 void LabelEditorDialog::setOpacity(int opacity){
     this->ui->inLabelOpacitySlider->setValue(opacity);
     this->ui->inLabelOpacitySpinner->setValue(opacity);
+}
+
+
+void LabelEditorDialog::setInLabelDescription(QString text){
+    this->ui->inLabelDescription->setText(text);
 }
 
 

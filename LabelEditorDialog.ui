@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
+    <width>517</width>
     <height>537</height>
    </rect>
   </property>
@@ -139,7 +139,7 @@ QGroupBox::title {
       <string notr="true"/>
      </property>
      <property name="title">
-      <string>Selected Label</string>
+      <string>选中的器官</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">

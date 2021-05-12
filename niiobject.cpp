@@ -3,11 +3,13 @@
 #include "utils.h"
 #include "printutils.h"
 
+#include <exception>
+
 
 NIIObject::NIIObject() : QObject(){
     m_file = "";
     m_reader = vtkNIFTIImageReader::New();
-    m_mapper = vtkNew<vtkPolyDataMapper>();
+    //m_mapper = vtkNew<vtkPolyDataMapper>();
     m_extent = new int[6]{0};
     m_scalarRange = new double[2]{0};
     m_labels = new QList<NIILabel*>();
@@ -16,7 +18,7 @@ NIIObject::NIIObject() : QObject(){
 
 NIIObject::NIIObject(std::string fileName) : NIIObject(){
     m_reader->SetFileName(fileName.c_str());
-    m_reader->Update();
+    m_reader->Update();  // 很快，不是时间瓶颈
     m_reader->GetDataExtent(m_extent);
     m_reader->GetOutput()->GetScalarRange(m_scalarRange);
     this->initLabels();
@@ -24,10 +26,21 @@ NIIObject::NIIObject(std::string fileName) : NIIObject(){
 
 
 void NIIObject::surfaceRendering(vtkRenderer* renderer){
+    // 比较耗时
+    std::cout << "renerering in Thread:" << QThread::currentThreadId() << endl;
+    QThread::sleep(10);
     if(m_renderer != renderer)  m_renderer = renderer;
     for(int i =1; i < this->m_labels->length(); i++){
-        this->surfaceRendering(i, renderer);
+        //std::cout << "renderering for NO." << i << " surface"<< endl;
+        try {
+            this->surfaceRendering(i, renderer);
+        } catch (std::string e) {
+            std::cerr << "exception occurs: " << e << endl;
+        }
+
     }
+    std::cout << "finished renderering" << endl;
+    emit renderDone();
 }
 
 void NIIObject::surfaceRendering(int labelIndex, vtkRenderer* renderer){
@@ -66,35 +79,53 @@ void NIIObject::surfaceRendering(int labelIndex, vtkRenderer* renderer){
 void NIIObject::initLabels(){
     int min = int(m_scalarRange[0]), max = int(m_scalarRange[1]);
     int n = max - min + 1;
+    if(n > PREDEFINED_COLOR_NUM){
+        std::cerr << "支持的标签类别数最大为 " << PREDEFINED_COLOR_NUM << "，但是读入的文件中标签类别数为 " << n << "，超出的标签不被显示!" << endl;
+        n = PREDEFINED_COLOR_NUM;
+    }
     for(int i = 0; i < n; i++){
         QColor* color = new QColor();
         int r = PREDEFINED_COLOR[i][0], g = PREDEFINED_COLOR[i][1], b = PREDEFINED_COLOR[i][2], a = PREDEFINED_COLOR[i][3];
         color->setRgb(r, g, b, a);
-        OrganLabelEditor* organ = new OrganLabelEditor("organ-"+QString::number(i), color);
+        OrganLabelEditor* organ = new OrganLabelEditor(CNLABELNAMES[i], color);
+        organ->index = i;
         NIILabel* label = new NIILabel(organ, min+i, 200);
         this->m_labels->append(label);
-        // 标签颜色与可视化对象进行绑定
-
     }
 }
 
 void NIIObject::changeSurfaceOpacity(int selectLabelIndex, int opacity){
     if(selectLabelIndex == -1)  return;
+    //std::cout << "surface opacity changed, and index is " << selectLabelIndex << endl;
     NIILabel* label = this->m_labels->at(selectLabelIndex);
     label->setOpacity(opacity);
     m_renderer->GetRenderWindow()->Render();
-    std::cout << "surface opacity changed, and index is " << selectLabelIndex << endl;
+
 }
 
 void NIIObject::changeSurfaceColor(int selectLabelIndex, int r, int g, int b, int a){
     if(selectLabelIndex == -1)  return;
+    //std::cout << "before surface color changed, and index is " << selectLabelIndex << endl;
     NIILabel *label = this->m_labels->at(selectLabelIndex);
     label->setColor(r, g, b, a);
     m_renderer->Render();
     m_renderer->GetRenderWindow()->Render();
-    std::cout << "surface color changed, and index is " << selectLabelIndex << endl;
+    //std::cout << "surface color changed, and index is " << selectLabelIndex << endl;
 }
 
 NIIObject::~NIIObject(){
+    delete m_scalarRange;
+    delete m_extent;
+    for(int i=0; i < m_labels->length(); i++){
+        delete m_labels->at(i);
+    }
+    delete m_labels;
 
+    m_reader->Delete();
+    //std::cout << "hahaha 1" << endl;
+    //m_mapper->Delete();
+    //std::cout << "hahaha 2" << endl;
+    m_renderer->Delete();
+    std::cout << "niiobject deleted" << endl;
 }
+

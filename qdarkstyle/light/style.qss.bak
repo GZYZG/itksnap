@@ -214,7 +214,7 @@ QCheckBox::indicator:indeterminate:focus, QCheckBox::indicator:indeterminate:hov
 https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qgroupbox
 
 --------------------------------------------------------------------------- */
-/* 
+/* */
 QGroupBox {
   font-weight: bold;
   border: 1px solid #C9CDD0;
@@ -268,7 +268,7 @@ QGroupBox::indicator:checked:hover, QGroupBox::indicator:checked:focus, QGroupBo
 QGroupBox::indicator:checked:disabled {
   image: url(":/qss_icons/light/rc/checkbox_checked_disabled.png");
 }
-*/
+
 
 /* QRadioButton -----------------------------------------------------------
 
