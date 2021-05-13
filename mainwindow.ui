@@ -107,7 +107,14 @@
     <addaction name="actionSave_as"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>分析</string>
+    </property>
+    <addaction name="actionStatistics"/>
+   </widget>
    <addaction name="menuITK_Snp"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -139,6 +146,14 @@
   <action name="actionOpen_Segmentation">
    <property name="text">
     <string>Open Segmentation</string>
+   </property>
+  </action>
+  <action name="actionStatistics">
+   <property name="text">
+    <string>统计信息</string>
+   </property>
+   <property name="iconText">
+    <string>统计信息</string>
    </property>
   </action>
  </widget>

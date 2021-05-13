@@ -70,6 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete workerThread;
+    delete labelEditor;
 }
 
 
@@ -201,7 +203,6 @@ void MainWindow::loadSegmentation(QString filePath){
     workerThread->start();
     emit renderSegmentation(this->m_renderer);
     //mask->surfaceRendering(this->m_renderer);
-    //workerThread.wait();
 }
 
 
