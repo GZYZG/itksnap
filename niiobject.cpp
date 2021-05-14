@@ -14,6 +14,7 @@ NIIObject::NIIObject() : QObject(){
     m_scalarRange = new double[2]{0};
     m_labels = new QList<NIILabel*>();
     m_renderer = nullptr;
+    m_mainThread = QThread::currentThread();
 }
 
 NIIObject::NIIObject(std::string fileName) : NIIObject(){
@@ -27,8 +28,7 @@ NIIObject::NIIObject(std::string fileName) : NIIObject(){
 
 void NIIObject::surfaceRendering(vtkRenderer* renderer){
     // 比较耗时
-    std::cout << "renerering in Thread:" << QThread::currentThreadId() << endl;
-    QThread::sleep(10);
+    std::cout << "renerering in Thread:" << QThread::currentThread() << endl;
     if(m_renderer != renderer)  m_renderer = renderer;
     for(int i =1; i < this->m_labels->length(); i++){
         //std::cout << "renderering for NO." << i << " surface"<< endl;
@@ -40,6 +40,7 @@ void NIIObject::surfaceRendering(vtkRenderer* renderer){
 
     }
     std::cout << "finished renderering" << endl;
+    this->moveToThread(m_mainThread);
     emit renderDone();
 }
 
@@ -95,8 +96,9 @@ void NIIObject::initLabels(){
 }
 
 void NIIObject::changeSurfaceOpacity(int selectLabelIndex, int opacity){
+    // std::cout << "selectLabelIndex index is " << selectLabelIndex << endl;
     if(selectLabelIndex == -1)  return;
-    //std::cout << "surface opacity changed, and index is " << selectLabelIndex << endl;
+    // std::cout << "before surface opacity changed, and index is " << selectLabelIndex << endl;
     NIILabel* label = this->m_labels->at(selectLabelIndex);
     label->setOpacity(opacity);
     m_renderer->GetRenderWindow()->Render();

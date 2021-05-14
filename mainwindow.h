@@ -62,6 +62,7 @@ private slots:
     //void on_pushButton_clicked();
     void on_actionOpen_MainImage_triggered();
     void on_actionOpen_Segmentation_triggered();
+    void on_actionQuit_triggered();
 
     void expand3DView(bool);
     void expandSliceView(bool, SliceViewPanel*);

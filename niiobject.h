@@ -22,6 +22,7 @@ public:
     QList<NIILabel*>* m_labels;
     //vtkPolyDataMapper *m_mapper;
     vtkRenderer *m_renderer;
+    QThread *m_mainThread;
 
     NIIObject(std::string fileName);
     ~NIIObject();
@@ -30,7 +31,7 @@ public:
     void initLabels();
     void clearLabels();
 
-private slots:
+public slots:
     void changeSurfaceOpacity(int selectLabelIndex, int opacity);
     void changeSurfaceColor(int selectLabelIndex, int r, int g, int b, int a);
 public slots:

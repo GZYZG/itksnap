@@ -156,7 +156,7 @@ void LabelEditorDialog::inColorWheelChanged(const QColor &color){
 
 void LabelEditorDialog::on_inLabelOpacitySlider_valueChanged(int value)
 {
-    //int opacity = this->ui->inLabelOpacitySlider->value();
+    int opacity = this->ui->inLabelOpacitySlider->value();
     //qDebug() << "in  on_inLabelOpacitySlider_valueChanged" << value;
     this->ui->inLabelOpacitySpinner->setValue(value);
     emit opacityChanged(this->selectLabelIndex, value);

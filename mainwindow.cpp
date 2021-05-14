@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->selectedOrgan = nullptr;
     this->segmentation = nullptr;
+    this->workerThread = nullptr;
     vtkNew<vtkGenericOpenGLRenderWindow> window;
     this->view3d->setRenderWindow(window.Get());
     labelEditor = new LabelEditorDialog(this);
@@ -116,6 +117,12 @@ void MainWindow::on_actionOpen_Segmentation_triggered(){
     //initializeImageFileDialog(dialog, QFileDialog::AcceptOpen);
     //while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
 }
+
+
+void MainWindow::on_actionQuit_triggered(){
+    this->close();
+}
+
 
 void MainWindow::initLeft(){
     // 初始化左侧，加入各个标签，对应的颜色和透明度
@@ -187,22 +194,30 @@ void MainWindow::removeDataset(){
 }
 
 void MainWindow::loadSegmentation(QString filePath){
-    std::cout << "load thread:" << QThread::currentThreadId() << endl;
+    std::cout << "load thread:" << QThread::currentThread() << endl;
     this->removeDataset();
 
     NIIObject *mask = new NIIObject(filePath.toStdString());  // 必须用new，否则当前函数推出后，进程对象会被销毁，子线程直接挂了！！！
     if(this->segmentation)
         delete this->segmentation;
-
     this->segmentation = mask;
-    workerThread = new QThread;
-    mask->moveToThread(workerThread);
-    //connect(&workerThread, &QThread::finished, this, nullptr);
-    connect(this, SIGNAL(renderSegmentation(vtkRenderer*)), mask, SLOT(surfaceRendering(vtkRenderer*)));
-    connect(mask, SIGNAL(renderDone()), this, SLOT(segmentationRenderDone()));
-    workerThread->start();
-    emit renderSegmentation(this->m_renderer);
-    //mask->surfaceRendering(this->m_renderer);
+
+    bool multiThreadLoad = true;
+    if(multiThreadLoad){
+
+        workerThread = new QThread;
+        mask->moveToThread(workerThread);
+        //connect(&workerThread, &QThread::finished, this, nullptr);
+        connect(this, SIGNAL(renderSegmentation(vtkRenderer*)), mask, SLOT(surfaceRendering(vtkRenderer*)));
+        connect(mask, SIGNAL(renderDone()), this, SLOT(segmentationRenderDone()));
+        workerThread->start();
+        emit renderSegmentation(this->m_renderer);
+    } else {
+        mask->surfaceRendering(this->m_renderer);
+        segmentationRenderDone();
+    }
+
+
 }
 
 
@@ -279,12 +294,13 @@ SliceViewPanel* MainWindow::creataSliceViewPanel(std::string objectName, std::st
 
 
 void MainWindow::segmentationRenderDone(){
-    if(workerThread->isRunning()){
-        workerThread->exit();
+    if(workerThread && workerThread->isRunning()){
+       workerThread->quit();
     }
-    qDebug() << "MainWindow know renderer done, now in: " << QThread::currentThreadId();
+
+    qDebug() << "MainWindow know renderer done, now in: " << QThread::currentThread();
     this->m_renderer->ResetCamera();
-    this->m_renderer->Render();
+    this->view3d->renderWindow()->Render();
 
     NIIObject *mask = this->segmentation;
 
@@ -298,10 +314,8 @@ void MainWindow::segmentationRenderDone(){
 
     // 将LabelEditorDialog 的信后 和 NIIObject 的槽 连接起来
     // 当标签的颜色或透明度改变时修改可视化对象的颜色和透明度
-    //LabelEditorDialog *labelEditor = mask->m_labels->at(0)->m_rgba->labelEditor;
-    connect(labelEditor, SIGNAL(opacityChanged(int, int)), mask, SLOT(changeSurfaceOpacity(int, int)));
-    connect(labelEditor, SIGNAL(colorChanged(int, int, int, int, int)), mask, SLOT(changeSurfaceColor(int, int, int, int, int)));
-
+    connect(labelEditor, &LabelEditorDialog::opacityChanged, this->segmentation, &NIIObject::changeSurfaceOpacity);
+    connect(labelEditor, &LabelEditorDialog::colorChanged, this->segmentation, &NIIObject::changeSurfaceColor);
 }
 
 
